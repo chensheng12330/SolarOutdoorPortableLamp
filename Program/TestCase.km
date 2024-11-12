@@ -1,0 +1,365 @@
+{
+    "root": {
+        "data": {
+            "id": "d12nt62nh400",
+            "created": 1715008599612,
+            "text": "测试用例"
+        },
+        "children": [
+            {
+                "data": {
+                    "id": "d12o1e5we8o0",
+                    "created": 1715009244136,
+                    "text": "硬件搭建"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d12o1jc4vts0",
+                            "created": 1715009255397,
+                            "text": "LED工作灯"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d14d9wah9wo0",
+                            "created": 1715181998213,
+                            "text": "电源指示灯"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d12o1qisre80",
+                            "created": 1715009271037,
+                            "text": "继电器线路"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d14damuwajk0",
+                                    "created": 1715182056044,
+                                    "text": "输入"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d14da3bet9s0",
+                                            "created": 1715182013507,
+                                            "text": "5v供电"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d14dag2if600",
+                                            "created": 1715182041267,
+                                            "text": "1路io"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d14ddss3cxs0",
+                                    "created": 1715182304027,
+                                    "text": "输出"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d14ddv9vd0w0",
+                                            "created": 1715182309456,
+                                            "text": "控制充电器12~14v输入"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d12oatezcdc0",
+                            "created": 1715009982614,
+                            "text": "电瓶电压输入"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d12odje88io0",
+                                    "created": 1715010195894,
+                                    "text": "2电阻串联分压？"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d12oiu04e400",
+                                            "created": 1715010610806,
+                                            "text": "100k"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d12obsvbnao0",
+                            "created": 1715010059790,
+                            "text": "单片机供电"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d12oby1m4t40",
+                                    "created": 1715010071054,
+                                    "text": "5v稳压"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d12oc1i42w00",
+                                    "created": 1715010078582,
+                                    "text": "adj-参考电压"
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d14dc0t75oo0",
+                            "created": 1715182164780,
+                            "text": "5v降压模块"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d14dcdi9z140",
+                                    "created": 1715182192418,
+                                    "text": "8~12v降 6v"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d14dcyipgm80",
+                                    "created": 1715182238156,
+                                    "text": "6v稳压到5v"
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d14dephhxpc0",
+                            "created": 1715182375220,
+                            "text": "充电器"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d14dervli7c0",
+                                    "created": 1715182380426,
+                                    "text": "输出12~14v"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d14df0l1jxs0",
+                                    "created": 1715182399379,
+                                    "text": "输入220v市电"
+                                },
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d14dhfan6mg0",
+                    "created": 1715182588131,
+                    "text": "电压系统"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d14dhh0ccm80",
+                            "created": 1715182591861,
+                            "text": "220v"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d14dhi6dtso0",
+                            "created": 1715182594403,
+                            "text": "12~14v"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d14dhmco6gg0",
+                            "created": 1715182603491,
+                            "text": "6v"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d14dhtlg5eg0",
+                            "created": 1715182619259,
+                            "text": "5v"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d14dhy2l91c0",
+                            "created": 1715182629003,
+                            "text": "8~14v"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d14di7jjj7k0",
+                    "created": 1715182649619,
+                    "text": "软件"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d18l1jx9qxc0",
+                            "created": 1715610153085,
+                            "text": "adc 测量电压"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l1rk30680",
+                            "created": 1715610169702,
+                            "text": "继电器控制"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l2ms9mq80",
+                            "created": 1715610237677,
+                            "text": "调试日志输出控制开关"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l5ax46600",
+                            "created": 1715610446941,
+                            "text": "LED显示灯"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l6za8uyg0",
+                            "created": 1715610578342,
+                            "text": "待办"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d18l5koso0w0",
+                                    "created": 1715610468206,
+                                    "text": "5线4LED显示被测电压"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d18l76ce7rk0",
+                                    "created": 1715610593710,
+                                    "text": "红外控制"
+                                },
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d12ogr5upbs0",
+                    "created": 1715010447894,
+                    "text": "上电测试"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d12ogzqsc480",
+                            "created": 1715010466574,
+                            "text": "逻辑分析仪"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d12ohda4hnc0",
+                                    "created": 1715010496041,
+                                    "text": "两IO口"
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d12ohg044n40",
+                            "created": 1715010501966,
+                            "text": "待测电压"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d12ohzayn0w0",
+                    "created": 1715010543981,
+                    "text": "问题 "
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d12oi1vymuw0",
+                            "created": 1715010549605,
+                            "text": "单片机工作电压5v"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d12oi5wbwqo0",
+                            "created": 1715010558334,
+                            "text": "待测电压 6~14v"
+                        },
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    },
+    "template": "right",
+    "theme": "fresh-blue",
+    "version": "1.4.43"
+}
