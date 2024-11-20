@@ -11,17 +11,7 @@
  */
 
 /** 接线图
- * 芯片: STC8H17K
-   1.2:	LowLED	1.1:BAT-ADC
-   1.3:IO-White	1.0:BAT-SUN
-   1.4:IO-RED	 3.7:KEY-MAIN
-   1.5:IO-YELLO	 3.6:KEY-brightness
-   1.6:IO-BLUE	3.5: LED-4
-   1.7:WORKLED	3.4: LED-3
-   5.4			3.3: LED-2
-   vcc			3.2: LED-1
-   adc-ref	    3.1: TxD1
-   gnd			3.0: RxD1
+ * 芯片: Ai8051
 
 
 实现功能
