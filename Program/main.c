@@ -62,11 +62,13 @@ void SysClose();
 2. timer
 3. adc
 4. uart
-5. key1,key2
+5. key1,key2,key3
 
 - 状态机
 1. 按键Key2输出PWM占空比: PWM100,PWM75,PWM50,PWM25 [3.6:KEY-brightness]
 2. 按键Key1输出LED模式: LED_Power_Show,LED_White,LED_YELLO, LED_RED_BLUE
+3. 按钮key3调节RGB显示模式
+
 
 - 中断
 1. timer0按键检测中断
@@ -77,6 +79,11 @@ void SysClose();
 1. 按键监控
 2. 输出IO口控制
 3. pwm亮度调节
+4. 8个RGB灯(RGB-WS2812B)驱动
+5. RGB-KEY控制
+6. 太能阳充电开启检测
+7. 外部USB充电开启
+8. 
 
 RTX51-Tiny
 https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-5-123776288-blog-92062159.235^v43^control&spm=1001.2101.3001.4242.4&utm_relevant_index=6
@@ -90,28 +97,39 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 #define VOLTAGE_LOW 85	 // 低电压阈值，对应8.5V
 
 /*************	本地变量声明	**************/
-// sbit ADC_SUN = P1 ^ 0; 		// IN-太阳能电板电压
-sbit ADC_BAT = P3 ^ 5; // IN-电池电压 P1 ^ 1
-// sbit IO_Low_LED   = P1 ^ 2;	// OUT-低电压显示LED
+
 sbit IO_LED_White = P1 ^ 3;	   // OUT-白光LED驱动控制开关，默认关
 sbit IO_LED_WarnRed = P1 ^ 4;  // OUT-红警示LEDLED驱动控制开关，默认关
 sbit IO_LED_YELLO = P1 ^ 5;	   // OUT-自然光LED驱动控制开关，默认关
 sbit IO_LED_WarnBlue = P1 ^ 6; // OUT-蓝光LED驱动控制开关，默认关
+sbit IO_LED_RGB      = P1 ^ 1; // OUT-RGB信号控制开关，默认关
 
 #define POW_LED_OPEN 0		  // 电量LED灯开启
 #define POW_LED_CLOSE 1		  // 电量LED灯关闭
 sbit IO_LED_WORKLED = P1 ^ 7; // 工作指示灯
-sbit IO_LED_ERR = P1 ^ 2;	  // 程序出错LED灯
+sbit IO_LED_ERR = P1 ^ 2;	  // 程序出错LED灯、低电量灯
 
 // 按键
 sbit KEY1 = P3 ^ 6; // 主菜单按键
 sbit KEY2 = P3 ^ 7; // 亮度调节按键
+sbit KEY3 = P5 ^ 2; // RGB模式选择按键
+sbi RestartKey = P4 ^ 7; //重启
+
+// 3.0/3.1 烧写
 
 // 电量显示LED
-sbit BAT_POW_LED4 = P1 ^ 0;
+sbit BAT_POW_LED4 = P1 ^ 5;
 sbit BAT_POW_LED3 = P3 ^ 4;
 sbit BAT_POW_LED2 = P3 ^ 3;
 sbit BAT_POW_LED1 = P3 ^ 2;
+
+sbit ADC_BAT = P0 ^ 0; // IN-电池电压 P1 ^ 1
+sbit ADC_SUN = P0 ^ 1; // IN-太阳能电板电压
+sbit ADC_ExtPower = P0 ^ 2; // IN-外部USB充电
+sbit ADC_LightSen = P0 ^ 3; // IN-光感
+sbit ADC_Temp = P0 ^ 4;		// IN-温度监控
+
+// 4.2/4.3 日志-UART2
 
 u16 Key1_cnt;
 u16 Key2_cnt;
