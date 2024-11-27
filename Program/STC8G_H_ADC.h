@@ -39,10 +39,10 @@
 #define	ADC_P17		0x80	//IO引脚 Px.7
 #define	ADC_P1_All	0xFF	//IO所有引脚
 
-#define ADC_POWER	(1<<7)	//ADC 电源
-#define ADC_START	(1<<6)	//ADC 转换启动控制位。自动清0
-#define ADC_FLAG	(1<<5)	//ADC 转换结束标志位。软件清0
-#define ADC_EPWMT	(1<<4)	//使能 PWM 同步触发 ADC 功能
+//#define ADC_POWER	(1<<7)	//ADC 电源
+//#define ADC_START	(1<<6)	//ADC 转换启动控制位。自动清0
+//#define ADC_FLAG	(1<<5)	//ADC 转换结束标志位。软件清0
+//#define ADC_EPWMT	(1<<4)	//使能 PWM 同步触发 ADC 功能
 #define ADC_CH0		0
 #define ADC_CH1		1
 #define ADC_CH2		2

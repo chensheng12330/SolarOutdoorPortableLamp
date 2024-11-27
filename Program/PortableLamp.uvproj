@@ -13,14 +13,14 @@
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>STC8H1K08 Series</Device>
-          <Vendor>STC</Vendor>
-          <Cpu>IRAM(0-0xFF) XRAM(0-0x03FF) IROM(0-0x1FF8) CLOCK(35000000)</Cpu>
+          <Device>AI8051U-8Bit Series</Device>
+          <Vendor>AI</Vendor>
+          <Cpu>IRAM(0-0xFF) XRAM(0-0x7FFF) IROM(0-0xFFFF) CLOCK(35000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"LIB\STARTUP.A51" ("Standard 8051 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>63265</DeviceId>
-          <RegisterFile>STC8.H</RegisterFile>
+          <DeviceId>30899</DeviceId>
+          <RegisterFile>AI8051U.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -46,13 +46,13 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\list\</OutputDirectory>
-          <OutputName>SunLamp</OutputName>
+          <OutputName>SolarOutdoorPortableLamp</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>1</CreateHexFile>
+          <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
-          <BrowseInformation>1</BrowseInformation>
-          <ListingPath>.\list\</ListingPath>
+          <BrowseInformation>0</BrowseInformation>
+          <ListingPath>.\</ListingPath>
           <HexFormatSelection>0</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -103,7 +103,7 @@
           <StopOnExitCode>3</StopOnExitCode>
           <CustomArgument></CustomArgument>
           <IncludeLibraryModules></IncludeLibraryModules>
-          <ComprImg>0</ComprImg>
+          <ComprImg>1</ComprImg>
           <BankNo>65535</BankNo>
         </CommonProperty>
         <DllOption>
@@ -134,7 +134,7 @@
             <RestoreFunctions>1</RestoreFunctions>
             <RestoreToolbox>1</RestoreToolbox>
             <LimitSpeedToRealTime>0</LimitSpeedToRealTime>
-            <RestoreSysVw>0</RestoreSysVw>
+            <RestoreSysVw>1</RestoreSysVw>
           </Simulator>
           <Target>
             <UseTarget>1</UseTarget>
@@ -145,8 +145,8 @@
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
             <RestoreFunctions>0</RestoreFunctions>
             <RestoreToolbox>1</RestoreToolbox>
-            <RestoreTracepoints>0</RestoreTracepoints>
-            <RestoreSysVw>0</RestoreSysVw>
+            <RestoreTracepoints>1</RestoreTracepoints>
+            <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
           <TargetSelection>12</TargetSelection>
@@ -168,12 +168,12 @@
         </DebugOption>
         <Utilities>
           <Flash1>
-            <UseTargetDll>0</UseTargetDll>
+            <UseTargetDll>1</UseTargetDll>
             <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>0</UpdateFlashBeforeDebugging>
             <Capability>0</Capability>
-            <DriverSelection>0</DriverSelection>
+            <DriverSelection>-1</DriverSelection>
           </Flash1>
           <bUseTDR>0</bUseTDR>
           <Flash2></Flash2>
@@ -188,7 +188,7 @@
           <Target51Misc>
             <MemoryModel>2</MemoryModel>
             <RTOS>0</RTOS>
-            <RomSize>1</RomSize>
+            <RomSize>2</RomSize>
             <DataHold>0</DataHold>
             <XDataHold>0</XDataHold>
             <UseOnchipRom>0</UseOnchipRom>
@@ -273,7 +273,7 @@
               <IRO>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x1ff9</Size>
+                <Size>0x10000</Size>
               </IRO>
               <IRA>
                 <Type>0</Type>
@@ -283,7 +283,7 @@
               <XRA>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x400</Size>
+                <Size>0x8000</Size>
               </XRA>
               <XRA512>
                 <Type>0</Type>
@@ -316,7 +316,7 @@
             <Fuzzy>3</Fuzzy>
             <Optimize>8</Optimize>
             <WarningLevel>2</WarningLevel>
-            <SizeSpeed>0</SizeSpeed>
+            <SizeSpeed>1</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
             <ACallAJmp>0</ACallAJmp>
             <InterruptVectorAddress>0</InterruptVectorAddress>
@@ -347,7 +347,7 @@
             <WarningLevel>2</WarningLevel>
             <DataOverlaying>1</DataOverlaying>
             <OverlayString></OverlayString>
-            <MiscControls>REMOVEUNUSED</MiscControls>
+            <MiscControls></MiscControls>
             <DisableWarningNumbers></DisableWarningNumbers>
             <LinkerCmdFile></LinkerCmdFile>
             <Assign></Assign>
