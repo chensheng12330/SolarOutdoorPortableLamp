@@ -83,7 +83,7 @@ void SysClose();
 5. RGB-KEY控制
 6. 太能阳充电开启检测
 7. 外部USB充电开启
-8. 
+8. uart接口
 
 RTX51-Tiny
 https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-5-123776288-blog-92062159.235^v43^control&spm=1001.2101.3001.4242.4&utm_relevant_index=6
@@ -98,27 +98,27 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 
 /*************	本地变量声明	**************/
 
-sbit IO_LED_White = P1 ^ 3;	   // OUT-白光LED驱动控制开关，默认关
-sbit IO_LED_WarnRed = P1 ^ 4;  // OUT-红警示LEDLED驱动控制开关，默认关
-sbit IO_LED_YELLO = P1 ^ 5;	   // OUT-自然光LED驱动控制开关，默认关
+sbit IO_LED_White    = P1 ^ 3;	   // OUT-白光LED驱动控制开关，默认关
+sbit IO_LED_WarnRed  = P1 ^ 4;  // OUT-红警示LEDLED驱动控制开关，默认关
+sbit IO_LED_YELLO    = P1 ^ 5;	   // OUT-自然光LED驱动控制开关，默认关
 sbit IO_LED_WarnBlue = P1 ^ 6; // OUT-蓝光LED驱动控制开关，默认关
 sbit IO_LED_RGB      = P1 ^ 1; // OUT-RGB信号控制开关，默认关
 
-#define POW_LED_OPEN 0		  // 电量LED灯开启
-#define POW_LED_CLOSE 1		  // 电量LED灯关闭
+#define POW_LED_OPEN 1		  // 电量LED灯开启
+#define POW_LED_CLOSE 0		  // 电量LED灯关闭
 sbit IO_LED_WORKLED = P1 ^ 7; // 工作指示灯
-sbit IO_LED_ERR = P1 ^ 2;	  // 程序出错LED灯、低电量灯
+sbit IO_LED_ERR     = P1 ^ 2;	  // 程序出错LED灯、低电量灯
 
 // 按键
 sbit KEY1 = P3 ^ 6; // 主菜单按键
 sbit KEY2 = P3 ^ 7; // 亮度调节按键
 sbit KEY3 = P5 ^ 2; // RGB模式选择按键
-sbi RestartKey = P4 ^ 7; //重启
+sbit RestartKey = P4 ^ 7; //重启
 
 // 3.0/3.1 烧写
 
 // 电量显示LED
-sbit BAT_POW_LED4 = P1 ^ 5;
+sbit BAT_POW_LED4 = P3 ^ 5;
 sbit BAT_POW_LED3 = P3 ^ 4;
 sbit BAT_POW_LED2 = P3 ^ 3;
 sbit BAT_POW_LED1 = P3 ^ 2;
@@ -133,16 +133,27 @@ sbit ADC_Temp = P0 ^ 4;		// IN-温度监控
 
 u16 Key1_cnt;
 u16 Key2_cnt;
+u16 Key3_cnt;
+
 bit Key1_Flag;
 bit Key2_Flag;
+bit Key3_Flag;
+
 bit B_1ms; // 1ms标志
 bit Key2_Short_Flag;
 bit Key2_Long_Flag;
 
+bit Key3_Short_Flag;
+bit Key3_Long_Flag;
+
 bit Key1_Function;
 bit Key1_Long_Function;
+
 bit Key2_Short_Function;
 bit Key2_Long_Function;
+
+bit Key3_Short_Function;
+bit Key3_Long_Function;
 
 // PWM模块
 PWMx_Duty PWMA_Duty;
@@ -189,6 +200,16 @@ enum CMDMenu
 
 enum CMDMenu cmd_Menu;
 
+enum RGBMode
+{
+	RGB_MODE_Close = 0, // 停止
+	RGB_MODE_1 = 1,		// 模式1
+	RGB_MODE_2 = 2,		// 模式2
+	RGB_MODE_3 = 3		// 模式3
+};
+
+enum RGBMode rgbMode;
+
 /*************	本地函数声明	**************/
 void turnOnLEDWithCMDType(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
@@ -200,21 +221,37 @@ void ______Hal__CONFIG() {}
 void GPIO_config(void)
 {
 	// 指令版FV
-	// P3-[0,1],[2,3,4]
 
-	// 设置P3.6，P3.7, P3.5为高阻输入
-	P3M0 = 0x00;
-	P3M1 = 0xe0;
+	//[P0]
+	P0M0 = 0x00;
+	P0M1 = 0xff;
+	//P0PD = 0xff;
 
-	// 使能P3.6，P3.7口上拉
-	P3PU = 0xc0;
+	// [P1]
+	// p1-[0] 高阻输入，悬空
+	// p1-[1~7] 推挽输出，控制MOS管
+	P1M0 = 0xfe;
+	P1M1 = 0x01;
+	//P1PU = 0xfe;
 
-	//[P1]
-	// p1-[1] uart2，双向口
-	// p1-[0,2~7] 推挽输出，控制MOS管
-	P1M0 = 0x78;
-	P1M1 = 0x00;
+	P2M0 = 0x00;
+	P2M1 = 0xff;
 
+	//--P3.0~P3.1, 双向口
+	//--P3.2~P3.5: 推挽输出，高电平正向
+	//--P3.6~P3.7: 高阻输入, 高电平正向
+	P3M0 = 0x3c;
+	P3M1 = 0xc0;
+
+	//P3PU = 0xc0;
+	//P3PD = 0x3c;
+
+	P4M0 = 0x00;
+	P4M1 = 0xf3;
+
+	P5M0 &= ~0x04;
+	P5M1 |= 0x04; 
+	
 	IO_LED_WORKLED = IO_LED_ERR = POW_LED_CLOSE;
 
 	// P1 = 0;
@@ -303,7 +340,7 @@ void UART_config(void)
 	COMx_InitStructure.UART_RxEnable = ENABLE;		// 接收允许,   ENABLE或DISABLE
 	UART_Configuration(UART2, &COMx_InitStructure); // 初始化串口2 USART1,USART2,USART3,USART4
 	NVIC_UART2_Init(ENABLE, Priority_1);			// 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
-	UART2_SW(UART2_SW_P10_P11);						// UART2_SW_P10_P11,UART2_SW_P46_P47
+	UART2_SW(UART2_SW_P46_P47);						// UART2_SW_P10_P11,UART2_SW_P46_P47
 }
 
 /************************ 定时器配置 ****************************/
@@ -610,14 +647,120 @@ void menuCheck()
 			}
 			PrintfString2("cmd menu: %hd", cmd_Menu);
 		}
+
+		// Key3, RGB模式调节
+		else if (Key3_Short_Function)
+		{
+			// cmd_Menu = CMD_Warn_Led;
+			Key3_Short_Function = 0;
+			PrintString2("Key3 short pressed.\r\n");
+			if ((pwm_DutyLevel + 1) > 4)
+			{
+				pwm_DutyLevel = PWM_Duty_Level_100;
+			}
+			else
+			{
+				pwm_DutyLevel++;
+			}
+
+			// 设置
+			//setPWMWithLEDBrightness(pwm_DutyLevel);
+		}
+
+		// Key3长按, 开启-关闭
+		else if (Key3_Long_Function)
+		{
+			Key3_Long_Function = 0;
+			PrintString2("Key3 long pressed.\r\n");
+			if (rgbMode == RGB_MODE_Close)
+			{
+				rgbMode = RGB_MODE_1;
+				//SysOpen();
+			}
+			else
+			{
+				rgbMode = RGB_MODE_Close;
+				//SysClose();
+			}
+			PrintfString2("rgb Mode: %hd", rgbMode);
+		}
 	}
 }
 
 /**********************************************/
+u8  TX2_Cnt;    //发送计数
+u8  RX2_Cnt;    //接收计数
+bit B_TX2_Busy; //发送忙标志
+
+u8  RX2_Buffer[128]; //接收缓冲
+#define Baudrate2   (65536 - MAIN_Fosc / 115200 / 4)
+void SetTimer2Baudraye(u32 dat)
+{
+    T2R = 0;		//Timer stop
+    T2_CT = 0;	//Timer2 set As Timer
+    T2x12 = 1;	//Timer2 set as 1T mode
+    T2H = (u8)(dat / 256);
+    T2L = (u8)(dat % 256);
+    ET2 = 0;    //禁止中断
+    T2R = 1;		//Timer run enable
+}
+
+void UART2_config(u8 brt)    // 选择波特率, 2: 使用Timer2做波特率, 其它值: 无效.
+{
+    if(brt == 2)
+    {
+        SetTimer2Baudraye(Baudrate2);
+
+        S2CFG |= 0x01;     //使用串口2时，W1位必需设置为1，否则可能会产生不可预期的错误
+        S2CON = (S2CON & 0x3f) | 0x40;    //UART2模式, 0x00: 同步移位输出, 0x40: 8位数据,可变波特率, 0x80: 9位数据,固定波特率, 0xc0: 9位数据,可变波特率
+        ES2   = 1;         //允许中断
+        S2REN = 1;         //允许接收
+        S2_S  = 1;         //UART2 switch to: 0: P1.2 P1.3,  1: P4.2 P4.3
+
+        B_TX2_Busy = 0;
+        TX2_Cnt = 0;
+        RX2_Cnt = 0;
+    }
+}
+void PrintString21(u8 *puts)
+{
+    for (; *puts != 0;  puts++)     //遇到停止符0结束
+    {
+        S2BUF = *puts;
+        B_TX2_Busy = 1;
+        while(B_TX2_Busy);
+    }
+}
+
 void main(void)
 {
 
+	 WTST = 0;  //设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
+    EAXFR = 1; //扩展寄存器(XFR)访问使能
+    CKCON = 0; //提高访问XRAM速度
+
+    P0M1 = 0x00;   P0M0 = 0x00;   //设置为准双向口
+    P1M1 = 0x00;   P1M0 = 0x00;   //设置为准双向口
+    P2M1 = 0x00;   P2M0 = 0x00;   //设置为准双向口
+    P3M1 = 0x00;   P3M0 = 0x00;   //设置为准双向口
+    P4M1 = 0x00;   P4M0 = 0x00;   //设置为准双向口
+    P5M1 = 0x00;   P5M0 = 0x00;   //设置为准双向口
+    P6M1 = 0x00;   P6M0 = 0x00;   //设置为准双向口
+    P7M1 = 0x00;   P7M0 = 0x00;   //设置为准双向口
+
+    UART2_config(2);    // 选择波特率, 2: 使用Timer2做波特率, 其它值: 无效.
+    EA = 1;             //允许全局中断
+    
+    PrintString21("AI8051U UART2 Test Programme!\r\n");  //UART2发送一个字符串
+
+    while (1)
+    {
+    }
+	
+	
+	return;
 	EAXSFR(); /* 扩展寄存器访问使能 */
+
 
 	// 初始化GPIO
 	GPIO_config();
@@ -628,14 +771,14 @@ void main(void)
 	// 初始化定时器
 	Timer_config();
 	// 初始化ADC
-	ADC_config();
+	//ADC_config();
 	// 初始化PWM
-	PWM_config();
+	//PWM_config();
 	// 启用全局中断
 	EA = 1;
 
 	#ifdef DEBUG_MODE
-	PrintString2("STC8 Solar Charging Lamp Programme!\r\n"); // UART2发送一个字符串
+	PrintString2("STC8051 Solar Charging Lamp Programme!\r\n"); // UART2发送一个字符串
 	#endif
 
 	// 初始化命令菜单状态
@@ -667,7 +810,7 @@ void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 	{
 	case PWM_Duty_Level_100:
 		/* code */
-		curPWMDuty = PWMPeriod * 0.8;
+		curPWMDuty = PWMPeriod * 0.7;
 		break;
 
 	case PWM_Duty_Level_75:
@@ -861,7 +1004,7 @@ void displayBatterPower(float inVol)
 //========================================================================
 void KeyScan(void)
 {
-	// 单纯短按按键
+	//Key1 单纯短按按键
 	if (!KEY1)
 	{
 		if (!Key1_Flag)
@@ -880,7 +1023,7 @@ void KeyScan(void)
 		Key1_Flag = 0;
 	}
 
-	// 长按短按按键
+	//Key2 长按短按按键
 	if (!KEY2)
 	{
 		if (!Key2_Flag)
@@ -908,6 +1051,36 @@ void KeyScan(void)
 		}
 		Key2_cnt = 0;
 		Key2_Flag = 0; // 按键释放
+	}
+
+	// Key3 长按短按按键
+	if (!KEY3)
+	{
+		if (!Key3_Flag)
+		{
+			Key3_cnt++;
+			if (Key3_cnt >= 15000) // 长按1s
+			{
+				Key3_Short_Flag = 0; // 清除短按标志
+				Key3_Long_Flag = 1;	 // 设置长按标志
+				Key3_Flag = 1;		 // 设置按键状态，防止重复触发
+				Key3_Long_Function = 1;
+			}
+			else if (Key3_cnt >= 50) // 50ms防抖
+			{
+				Key3_Short_Flag = 1; // 设置短按标志
+			}
+		}
+	}
+	else
+	{
+		if (Key3_Short_Flag) // 判断是否短按
+		{
+			Key3_Short_Flag = 0; // 清除短按标志
+			Key3_Short_Function = 1;
+		}
+		Key3_cnt = 0;
+		Key3_Flag = 0; // 按键释放
 	}
 }
 

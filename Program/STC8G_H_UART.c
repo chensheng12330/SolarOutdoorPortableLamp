@@ -137,10 +137,11 @@ u8 UART_Configuration(u8 UARTx, COMx_InitDefine *COMx)
 			AUXR &= ~(1<<4);	//Timer stop
 			AUXR &= ~(1<<3);	//Timer2 set As Timer
 			AUXR |=  (1<<2);	//Timer2 set as 1T mode
-			TH2 = (u8)(j>>8);
-			TL2 = (u8)j;
+			T2H = (u8)(j>>8);
+			T2L = (u8)j;
 			IE2  &= ~(1<<2);	//禁止中断
 			AUXR |=  (1<<4);	//Timer run enable
+			S2CFG |= 0x01;
 		}
 		else	return FAIL;	//模式错误
 		UART2_RxEnable(COMx->UART_RxEnable);	//UART接收使能
