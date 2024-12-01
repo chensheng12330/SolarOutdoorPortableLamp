@@ -29,3 +29,17 @@ void delay_ms(unsigned char ms)
 		while(--i);
 	}while(--ms);
 }
+
+/**
+ * 延时函数，以秒为单位
+ * @param s 延时的时间，单位为秒
+ */
+void delay_s(unsigned char s) {
+    // 计算延时次数，每次延时250毫秒，因此1秒需要延时4次
+    unsigned int i = s * 4;
+    // 执行延时
+    do {
+        // 延时250毫秒
+        delay_ms(250);
+    } while (--i);
+}

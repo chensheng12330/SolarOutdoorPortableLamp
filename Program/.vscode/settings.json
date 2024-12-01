@@ -6,6 +6,7 @@
         "intrins.h": "c",
         "stdio.h": "c",
         "STDIO.H": "cpp",
-        "INTRINS.H": "cpp"
+        "INTRINS.H": "cpp",
+        "stc8g_h_delay.h": "c"
     }
 }

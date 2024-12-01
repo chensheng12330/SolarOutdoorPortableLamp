@@ -31,6 +31,10 @@
 	- 3. 50%
 	- 4. 25%
   - 长按恢复默认值 100%
+
+  补充功能点:
+  1. 系统关闭时，LED灯停止闪烁
+  2. 系统启动时，走一自检流程
 */
 
 #define DEBUG_MODE 1 // 开发模式
@@ -572,7 +576,13 @@ void scanerBatterVoltage()
 			// inVol = Res*RefVol / 1024
 			// 外部电池电压4.2v  (获取内部参考电压)
 			// 外部参考电压为2.5v， IO口电压的计算公式应为:  2500 * adc_result / 4096, 待调试.
-			fCalVol = (adcResVal * 4.2f) / 1024.0f; // 单位mv（1196） 
+
+			/**
+			 ADC被转换通道的输入电压Vin ＝ AVcc电压 ×12位ADC转换结果 /4096
+			 */
+
+			// 12位ADC转换结果， 外部电阻分压1/2,结果需要x2
+			fCalVol = (adcResVal * 3.30f * 2) / 4096.0f; // 单位mv（1196）
 
 #ifdef DEBUG_MODE
 			PrintfString2("batter voltage: %f v. adcResVal: %ld\r\n", fCalVol, adcResVal);
@@ -753,12 +763,16 @@ void begainSelfCheck()
 
 void endSelfCheck()
 {
-	delay_ms(250);
-	delay_ms(250);
-	delay_ms(250);
-	delay_ms(250);
+	delay_s(1);
 	IO_LED_WORKLED = IO_LED_ERR = POW_LED_CLOSE;
-	BAT_POW_LED1 = BAT_POW_LED2 = BAT_POW_LED3 = BAT_POW_LED4 = POW_LED_CLOSE;
+	delay_s(1);
+	BAT_POW_LED1 = POW_LED_CLOSE;
+	delay_s(1);
+	BAT_POW_LED2 = POW_LED_CLOSE;
+	delay_s(1);
+	BAT_POW_LED3 = POW_LED_CLOSE;
+	delay_s(1);
+	BAT_POW_LED4 = POW_LED_CLOSE;
 
 	delay_ms(250);
 	delay_ms(250);
@@ -1078,10 +1092,10 @@ void SysOpen()
  */
 void SysClose()
 {
+	begainSelfCheck();
 	cmd_Menu = CMD_Sys_Close;
 	PrintString2("Sys Close.");
 	PWMA_ENO = 0x0; // Close All;
-	LED_WORKLED_Flag = IO_LED_WORKLED = BAT_POW_LED1 = BAT_POW_LED2 = BAT_POW_LED3 = BAT_POW_LED4 = POW_LED_CLOSE;
 	// PWM2P_OUT_DIS();
 	// IO口强制为高阻模式
 	// UART接收 关闭
@@ -1094,6 +1108,9 @@ void SysClose()
 	// PWM 关闭
 	PWMA_DIS();
 	// 省电模式
+	
+	endSelfCheck();
+	LED_WORKLED_Flag = IO_LED_WORKLED = BAT_POW_LED1 = BAT_POW_LED2 = BAT_POW_LED3 = BAT_POW_LED4 = POW_LED_CLOSE;
 
 	PCON |= 0x02; ;	//Sleep
 	return;
