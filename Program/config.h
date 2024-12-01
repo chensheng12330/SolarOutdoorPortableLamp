@@ -83,7 +83,9 @@
 //========================================================================
 
 #include "type_def.h"
-#include "AI8051U8BIT.H"
+//#include "AI8051U8BIT.H"
+//#include "STC8H.h"
+#include "AI8051U.h"
 #include <intrins.h>
 #include <stdlib.h>
 #include <stdio.h>

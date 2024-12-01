@@ -140,7 +140,7 @@ typedef struct
 	u8	TIM_Mode;		//工作模式,  	TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_16BitAutoReloadNoMask
 	u8	TIM_ClkSource;	//时钟源		TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
 	u8	TIM_ClkOut;		//可编程时钟输出,	ENABLE,DISABLE
-	u16	TIM_Value;		//装载初值
+	u32	TIM_Value;		//装载初值
 	u8	TIM_PS;         //8位预分频器 (注意:并非所有系列都有此寄存器,详情请查看数据手册)
 	u8	TIM_Run;		//是否运行		ENABLE,DISABLE
 } TIM_InitTypeDef;

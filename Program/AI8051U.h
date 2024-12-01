@@ -402,6 +402,8 @@ sfr         DPS         =           0xe3;
 sfr         CMPCR1      =           0xe6;
     sbit    CMPEN       =           CMPCR1^7;
     sbit    CMPIF       =           CMPCR1^6;
+    sbit    PIE         =           CMPCR1^5;
+    sbit    NIE         =           CMPCR1^4;
     sbit    CMPOE       =           CMPCR1^1;
     sbit    CMPRES      =           CMPCR1^0;
 
@@ -484,10 +486,10 @@ sfr         RSTCFG      =           0xff;
 
 /////////////////////////////////////////////////
 //
-//�������⹦�ܼĴ���λ����չRAM����
-//������Щ�Ĵ���,���Ƚ�EAXFR����Ϊ1,�ſ�������д
+//如下特殊功能寄存器位于扩展RAM区域
+//访问这些寄存器,需先将EAXFR设置为1,才可正常读写
 //    EAXFR = 1;
-//����
+//或者
 //    P_SW2 |= 0x80;
 ///////////////////////////////////////////////////
 
@@ -1406,8 +1408,8 @@ sfr         RSTCFG      =           0xff;
 
 /////////////////////////////////////////////////
 
-#define	EAXSFR()		EAXFR = 1		/* MOVX A,@DPTR/MOVX @DPTR,Aָ��Ĳ�������Ϊ��չSFR(XSFR) */
-#define	EAXRAM()		EAXFR = 0		/* MOVX A,@DPTR/MOVX @DPTR,Aָ��Ĳ�������Ϊ��չRAM(XRAM) */
+#define	EAXSFR()		EAXFR = 1		/* MOVX A,@DPTR/MOVX @DPTR,A指令的操作对象为扩展SFR(XSFR) */
+#define	EAXRAM()		EAXFR = 0		/* MOVX A,@DPTR/MOVX @DPTR,A指令的操作对象为扩展RAM(XRAM) */
 
 /////////////////////////////////////////////////
 #define NOP1()  _nop_()

@@ -7,20 +7,20 @@
 
   <Targets>
     <Target>
-      <TargetName>Target 1</TargetName>
-      <ToolsetNumber>0x0</ToolsetNumber>
-      <ToolsetName>MCS-51</ToolsetName>
+      <TargetName>SolarPortableLamp</TargetName>
+      <ToolsetNumber>0x1</ToolsetNumber>
+      <ToolsetName>MCS-251</ToolsetName>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>AI8051U-8Bit Series</Device>
-          <Vendor>AI</Vendor>
-          <Cpu>IRAM(0-0xFF) XRAM(0-0x7FFF) IROM(0-0xFFFF) CLOCK(35000000)</Cpu>
+          <Device>STC8051U-32Bit Series</Device>
+          <Vendor>STC</Vendor>
+          <Cpu>IRAM(0-0x7FF) XRAM(0x10000-0x17FFF) IROM(0xFF0000-0xFFFFFF) CLOCK(35000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
-          <StartupFile>"LIB\STARTUP.A51" ("Standard 8051 Startup Code")</StartupFile>
+          <StartupFile>"LIB\STARTUP251.ASM" ("80251 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>30899</DeviceId>
-          <RegisterFile>AI8051U.H</RegisterFile>
+          <DeviceId>63668</DeviceId>
+          <RegisterFile>STC8051U.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -49,10 +49,10 @@
           <OutputName>SolarOutdoorPortableLamp</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
+          <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
-          <BrowseInformation>0</BrowseInformation>
-          <ListingPath>.\</ListingPath>
+          <BrowseInformation>1</BrowseInformation>
+          <ListingPath>.\list\</ListingPath>
           <HexFormatSelection>0</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -107,14 +107,14 @@
           <BankNo>65535</BankNo>
         </CommonProperty>
         <DllOption>
-          <SimDllName>S8051.DLL</SimDllName>
+          <SimDllName>S251.DLL</SimDllName>
           <SimDllArguments></SimDllArguments>
-          <SimDlgDll>DP51.DLL</SimDlgDll>
-          <SimDlgDllArguments>-pDP8051</SimDlgDllArguments>
-          <TargetDllName>S8051.DLL</TargetDllName>
+          <SimDlgDll>DCORE51.DLL</SimDlgDll>
+          <SimDlgDllArguments>-p251</SimDlgDllArguments>
+          <TargetDllName>S251.DLL</TargetDllName>
           <TargetDllArguments></TargetDllArguments>
-          <TargetDlgDll>TP51.DLL</TargetDlgDll>
-          <TargetDlgDllArguments>-p51</TargetDlgDllArguments>
+          <TargetDlgDll>TCORE51.DLL</TargetDlgDll>
+          <TargetDlgDllArguments>-p251</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>
@@ -139,7 +139,7 @@
           <Target>
             <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>0</RunToMain>
+            <RunToMain>1</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
@@ -149,7 +149,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>12</TargetSelection>
+          <TargetSelection>1</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -163,7 +163,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>BIN\STCMON51.DLL</Driver>
+            <Driver>BIN\STCMON251.DLL</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -171,11 +171,11 @@
             <UseTargetDll>1</UseTargetDll>
             <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
-            <UpdateFlashBeforeDebugging>0</UpdateFlashBeforeDebugging>
-            <Capability>0</Capability>
+            <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
+            <Capability>1</Capability>
             <DriverSelection>-1</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
+          <bUseTDR>1</bUseTDR>
           <Flash2></Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -184,62 +184,46 @@
           <pFcArmRoot></pFcArmRoot>
           <FcArmLst>0</FcArmLst>
         </Utilities>
-        <Target51>
-          <Target51Misc>
-            <MemoryModel>2</MemoryModel>
+        <Target251>
+          <Target251Misc>
+            <MemoryModel>3</MemoryModel>
             <RTOS>0</RTOS>
-            <RomSize>2</RomSize>
-            <DataHold>0</DataHold>
+            <RomSize>3</RomSize>
+            <NearDataHold>0</NearDataHold>
             <XDataHold>0</XDataHold>
-            <UseOnchipRom>0</UseOnchipRom>
-            <UseOnchipArithmetic>0</UseOnchipArithmetic>
-            <UseMultipleDPTR>0</UseMultipleDPTR>
-            <UseOnchipXram>0</UseOnchipXram>
-            <HadIRAM>1</HadIRAM>
-            <HadXRAM>1</HadXRAM>
-            <HadIROM>1</HadIROM>
-            <Moda2>0</Moda2>
-            <Moddp2>0</Moddp2>
-            <Modp2>0</Modp2>
-            <Mod517dp>0</Mod517dp>
-            <Mod517au>0</Mod517au>
-            <Mode2>0</Mode2>
-            <useCB>0</useCB>
-            <useXB>0</useXB>
-            <useL251>1</useL251>
-            <useA251>0</useA251>
-            <Mx51>0</Mx51>
-            <ModC812>0</ModC812>
-            <ModCont>0</ModCont>
-            <Lp51>0</Lp51>
-            <useXBS>0</useXBS>
-            <ModDA>0</ModDA>
-            <ModAB2>0</ModAB2>
-            <Mx51P>0</Mx51P>
-            <hadXRAM2>0</hadXRAM2>
-            <uocXram2>0</uocXram2>
-            <hadXRAM3>0</hadXRAM3>
-            <ModC2>0</ModC2>
-            <ModH2>0</ModH2>
-            <Mdu_R515>0</Mdu_R515>
-            <Mdu_F120>0</Mdu_F120>
-            <Psoc>0</Psoc>
-            <hadIROM2>0</hadIROM2>
-            <hadIROM3>0</hadIROM3>
-            <ModSmx2>0</ModSmx2>
-            <cBanks>0</cBanks>
-            <xBanks>0</xBanks>
+            <FarDataHold>0</FarDataHold>
+            <uocRom>0</uocRom>
+            <uocXRAM>0</uocXRAM>
+            <uSrcBin>1</uSrcBin>
+            <uFrame4>0</uFrame4>
+            <hadIRAM>1</hadIRAM>
+            <hadXRAM>1</hadXRAM>
+            <hadIROM>1</hadIROM>
+            <Use_Code_Banking>0</Use_Code_Banking>
+            <uCC7>0</uCC7>
+            <fp_hp>0</fp_hp>
+            <CBANKS2>0</CBANKS2>
             <OnChipMemories>
               <RCB>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0xffff</Size>
+                <Size>0x10000</Size>
               </RCB>
-              <RXB>
+              <IROM>
+                <Type>1</Type>
+                <StartAddress>0xff0000</StartAddress>
+                <Size>0x10000</Size>
+              </IROM>
+              <IRAM>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
-              </RXB>
+                <Size>0x800</Size>
+              </IRAM>
+              <XRAM>
+                <Type>0</Type>
+                <StartAddress>0x10000</StartAddress>
+                <Size>0x8000</Size>
+              </XRAM>
               <Ocm1>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
@@ -255,78 +239,42 @@
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </Ocm3>
-              <Ocr1>
+              <Ocm4>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
-              </Ocr1>
-              <Ocr2>
+              </Ocm4>
+              <Ocm5>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
-              </Ocr2>
-              <Ocr3>
+              </Ocm5>
+              <Ocm6>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
-              </Ocr3>
-              <IRO>
-                <Type>1</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x10000</Size>
-              </IRO>
-              <IRA>
-                <Type>0</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x100</Size>
-              </IRA>
-              <XRA>
-                <Type>0</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x8000</Size>
-              </XRA>
-              <XRA512>
-                <Type>0</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
-              </XRA512>
-              <IROM512>
-                <Type>0</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
-              </IROM512>
-              <XRA513>
-                <Type>0</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
-              </XRA513>
-              <IROM513>
-                <Type>0</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
-              </IROM513>
+              </Ocm6>
             </OnChipMemories>
-          </Target51Misc>
-          <C51>
-            <RegisterColoring>0</RegisterColoring>
-            <VariablesInOrder>0</VariablesInOrder>
-            <IntegerPromotion>1</IntegerPromotion>
-            <uAregs>0</uAregs>
-            <UseInterruptVector>1</UseInterruptVector>
+          </Target251Misc>
+          <C251>
+            <RegColor>0</RegColor>
+            <uOrder>0</uOrder>
+            <uAlias>1</uAlias>
+            <uRentF>0</uRentF>
+            <uUch>0</uUch>
+            <uFlt64>0</uFlt64>
             <Fuzzy>3</Fuzzy>
-            <Optimize>8</Optimize>
-            <WarningLevel>2</WarningLevel>
-            <SizeSpeed>1</SizeSpeed>
-            <ObjectExtend>1</ObjectExtend>
-            <ACallAJmp>0</ACallAJmp>
-            <InterruptVectorAddress>0</InterruptVectorAddress>
+            <Optim>7</Optim>
+            <wLevel>2</wLevel>
+            <SizSpd>1</SizSpd>
+            <AcaOpt>0</AcaOpt>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
-          </C51>
+          </C251>
           <Ax51>
             <UseMpl>0</UseMpl>
             <UseStandard>1</UseStandard>
@@ -343,7 +291,7 @@
             <useFile>0</useFile>
             <linkonly>0</linkonly>
             <UseMemoryFromTarget>1</UseMemoryFromTarget>
-            <CaseSensitiveSymbols>0</CaseSensitiveSymbols>
+            <CaseSensitiveSymbols>1</CaseSensitiveSymbols>
             <WarningLevel>2</WarningLevel>
             <DataOverlaying>1</DataOverlaying>
             <OverlayString></OverlayString>
@@ -370,16 +318,21 @@
             <DataSegmentName></DataSegmentName>
             <IDataSegmentName></IDataSegmentName>
           </Lx51>
-        </Target51>
+        </Target251>
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Source Group 1</GroupName>
+          <GroupName>Source</GroupName>
           <Files>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>功能说明.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\功能说明.txt</FilePath>
             </File>
             <File>
               <FileName>STC8G_H_ADC.c</FileName>
@@ -392,19 +345,14 @@
               <FilePath>.\STC8G_H_Delay.c</FilePath>
             </File>
             <File>
+              <FileName>STC8G_H_Exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STC8G_H_Exti.c</FilePath>
+            </File>
+            <File>
               <FileName>STC8G_H_GPIO.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STC8G_H_GPIO.c</FilePath>
-            </File>
-            <File>
-              <FileName>STC8G_H_UART.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STC8G_H_UART.c</FilePath>
-            </File>
-            <File>
-              <FileName>STC8G_H_UART_Isr.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STC8G_H_UART_Isr.c</FilePath>
             </File>
             <File>
               <FileName>STC8G_H_NVIC.c</FileName>
@@ -417,14 +365,24 @@
               <FilePath>.\STC8G_H_Timer.c</FilePath>
             </File>
             <File>
+              <FileName>STC8G_H_Timer_Isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STC8G_H_Timer_Isr.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC8G_H_UART.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STC8G_H_UART.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC8G_H_UART_Isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STC8G_H_UART_Isr.c</FilePath>
+            </File>
+            <File>
               <FileName>STC8H_PWM.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STC8H_PWM.c</FilePath>
-            </File>
-            <File>
-              <FileName>STC8G_H_Exti.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STC8G_H_Exti.c</FilePath>
             </File>
           </Files>
         </Group>

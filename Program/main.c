@@ -110,8 +110,8 @@ sbit IO_LED_WORKLED = P1 ^ 7; // 工作指示灯
 sbit IO_LED_ERR     = P1 ^ 2;	  // 程序出错LED灯、低电量灯
 
 // 按键
-sbit KEY1 = P3 ^ 6; // 主菜单按键
-sbit KEY2 = P3 ^ 7; // 亮度调节按键
+sbit KEY1 = P3 ^ 7; // 主菜单按键
+sbit KEY2 = P3 ^ 6; // 亮度调节按键
 sbit KEY3 = P5 ^ 2; // RGB模式选择按键
 sbit RestartKey = P4 ^ 7; //重启
 
@@ -213,6 +213,8 @@ enum RGBMode rgbMode;
 /*************	本地函数声明	**************/
 void turnOnLEDWithCMDType(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
+void begainSelfCheck();
+void endSelfCheck();
 
 /*************  外部函数和变量声明 *****************/
 /******************* IO配置函数 *******************/
@@ -225,26 +227,27 @@ void GPIO_config(void)
 	//[P0]
 	P0M0 = 0x00;
 	P0M1 = 0xff;
-	//P0PD = 0xff;
+	P0PD = 0x00;
+	P0PU = 0x00;
 
 	// [P1]
 	// p1-[0] 高阻输入，悬空
 	// p1-[1~7] 推挽输出，控制MOS管
 	P1M0 = 0xfe;
 	P1M1 = 0x01;
-	//P1PU = 0xfe;
+	P1PU = 0xfe;
 
 	P2M0 = 0x00;
 	P2M1 = 0xff;
 
 	//--P3.0~P3.1, 双向口
 	//--P3.2~P3.5: 推挽输出，高电平正向
-	//--P3.6~P3.7: 高阻输入, 高电平正向
+	//--P3.6~P3.7: 高阻输入, 低电平正向，拉高
 	P3M0 = 0x3c;
 	P3M1 = 0xc0;
 
-	//P3PU = 0xc0;
-	//P3PD = 0x3c;
+	P3PU = 0xc0;   //P3.6~P3.7 内部拉高, 
+	P3PD = 0x00;
 
 	P4M0 = 0x00;
 	P4M1 = 0xf3;
@@ -252,11 +255,17 @@ void GPIO_config(void)
 	P5M0 &= ~0x04;
 	P5M1 |= 0x04; 
 	
+	P5PU = 0x04;   //P5.2 内部拉高
+
+	//工作指示灯
 	IO_LED_WORKLED = IO_LED_ERR = POW_LED_CLOSE;
+
+	//电量灯
+	BAT_POW_LED1   = BAT_POW_LED2 = BAT_POW_LED3 = BAT_POW_LED4 = POW_LED_CLOSE;
 
 	// P1 = 0;
 	// PWM 双向IO
-	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = 0;
+	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = IO_LED_RGB = POW_LED_CLOSE;
 
 	/*
 		GPIO_InitTypeDef GPIO_InitStructureADC;		//结构定义
@@ -305,10 +314,10 @@ void Exti_config(void)
 
 void INT3_ISR_Handler(void) interrupt INT3_VECTOR
 {
-
+	// 系统关闭状态
 	if (cmd_Menu == CMD_Sys_Close)
 	{
-		// 系统关闭状态
+		//打开系统
 		cmd_Menu = CMD_Sys_Open;
 		SysOpen();
 	}
@@ -318,16 +327,20 @@ void INT3_ISR_Handler(void) interrupt INT3_VECTOR
 /******************* AD配置函数 *******************/
 void ADC_config(void)
 {
-	ADC_InitTypeDef ADC_InitStructure; // 结构定义
+	ADCTIM = 0x3f;	  // 设置 ADC 内部时序，ADC采样时间建议设最大值
+	ADCCFG = 0x2f;	  // 设置 ADC 时钟为系统时钟/2/16/16
+	ADC_CONTR = 0x80; // 使能 ADC 模块
 
-	ADC_InitStructure.ADC_SMPduty = 31;					   // ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 10）
-	ADC_InitStructure.ADC_CsSetup = 0;					   // ADC 通道选择时间控制 0(默认),1
-	ADC_InitStructure.ADC_CsHold = 1;					   // ADC 通道选择保持时间控制 0,1(默认),2,3
-	ADC_InitStructure.ADC_Speed = ADC_SPEED_2X16T;		   // 设置 ADC 工作时钟频率	ADC_SPEED_2X1T~ADC_SPEED_2X16T
-	ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED; // ADC结果调整,	ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIFIED
-	ADC_Inilize(&ADC_InitStructure);					   // 初始化
-	ADC_PowerControl(ENABLE);							   // ADC电源开关, ENABLE或DISABLE
-	NVIC_ADC_Init(DISABLE, Priority_0);					   // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
+	// ADC_InitTypeDef ADC_InitStructure; // 结构定义
+
+	// ADC_InitStructure.ADC_SMPduty = 31;					   // ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 10）
+	// ADC_InitStructure.ADC_CsSetup = 0;					   // ADC 通道选择时间控制 0(默认),1
+	// ADC_InitStructure.ADC_CsHold = 1;					   // ADC 通道选择保持时间控制 0,1(默认),2,3
+	// ADC_InitStructure.ADC_Speed = ADC_SPEED_2X16T;		   // 设置 ADC 工作时钟频率	ADC_SPEED_2X1T~ADC_SPEED_2X16T
+	// ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED; // ADC结果调整,	ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIFIED
+	// ADC_Inilize(&ADC_InitStructure);					   // 初始化
+	// ADC_PowerControl(ENABLE);							   // ADC电源开关, ENABLE或DISABLE
+	// NVIC_ADC_Init(DISABLE, Priority_0);					   // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
 }
 
 /***************  串口2初始化函数,调试输出 *****************/
@@ -548,7 +561,7 @@ void scanerBatterVoltage()
 			ADC10S_Count = 0;
 
 			// 获取电压值  P3.5/ADC13
-			adcResVal = Get_ADCResult(ADC_CH13); // 参数0~15,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
+			adcResVal = Get_ADC12bitResult(ADC_CH8); // 参数0~15,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
 
 			if (adcResVal == 4096 || adcResVal < 1) // 数据异常时
 			{
@@ -603,13 +616,6 @@ void menuCheck()
 			PrintfString2("cmd menu: %hd. \r\n", cmd_Menu);
 			turnOnLEDWithCMDType(cmd_Menu);
 		}
-		// else if(Key1_Long_Function){
-		// 	//长按关灯
-		// 	cmd_Menu = CMD_None_Led;
-		// 	PrintString2("Key1_Long pressed.\r\n");
-		// 	turnOnLEDWithCMDType(cmd_Menu);
-		// 	PrintfString2("cmd menu: %d",cmd_Menu);
-		// }
 
 		// Key2, 亮度调节
 		else if (Key2_Short_Function)
@@ -664,7 +670,7 @@ void menuCheck()
 			}
 
 			// 设置
-			//setPWMWithLEDBrightness(pwm_DutyLevel);
+			setPWMWithLEDBrightness(pwm_DutyLevel);
 		}
 
 		// Key3长按, 开启-关闭
@@ -687,91 +693,24 @@ void menuCheck()
 	}
 }
 
-/**********************************************/
-u8  TX2_Cnt;    //发送计数
-u8  RX2_Cnt;    //接收计数
-bit B_TX2_Busy; //发送忙标志
-
-u8  RX2_Buffer[128]; //接收缓冲
-#define Baudrate2   (65536 - MAIN_Fosc / 115200 / 4)
-void SetTimer2Baudraye(u32 dat)
-{
-    T2R = 0;		//Timer stop
-    T2_CT = 0;	//Timer2 set As Timer
-    T2x12 = 1;	//Timer2 set as 1T mode
-    T2H = (u8)(dat / 256);
-    T2L = (u8)(dat % 256);
-    ET2 = 0;    //禁止中断
-    T2R = 1;		//Timer run enable
-}
-
-void UART2_config(u8 brt)    // 选择波特率, 2: 使用Timer2做波特率, 其它值: 无效.
-{
-    if(brt == 2)
-    {
-        SetTimer2Baudraye(Baudrate2);
-
-        S2CFG |= 0x01;     //使用串口2时，W1位必需设置为1，否则可能会产生不可预期的错误
-        S2CON = (S2CON & 0x3f) | 0x40;    //UART2模式, 0x00: 同步移位输出, 0x40: 8位数据,可变波特率, 0x80: 9位数据,固定波特率, 0xc0: 9位数据,可变波特率
-        ES2   = 1;         //允许中断
-        S2REN = 1;         //允许接收
-        S2_S  = 1;         //UART2 switch to: 0: P1.2 P1.3,  1: P4.2 P4.3
-
-        B_TX2_Busy = 0;
-        TX2_Cnt = 0;
-        RX2_Cnt = 0;
-    }
-}
-void PrintString21(u8 *puts)
-{
-    for (; *puts != 0;  puts++)     //遇到停止符0结束
-    {
-        S2BUF = *puts;
-        B_TX2_Busy = 1;
-        while(B_TX2_Busy);
-    }
-}
 
 void main(void)
 {
-
-	 WTST = 0;  //设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
-    EAXFR = 1; //扩展寄存器(XFR)访问使能
-    CKCON = 0; //提高访问XRAM速度
-
-    P0M1 = 0x00;   P0M0 = 0x00;   //设置为准双向口
-    P1M1 = 0x00;   P1M0 = 0x00;   //设置为准双向口
-    P2M1 = 0x00;   P2M0 = 0x00;   //设置为准双向口
-    P3M1 = 0x00;   P3M0 = 0x00;   //设置为准双向口
-    P4M1 = 0x00;   P4M0 = 0x00;   //设置为准双向口
-    P5M1 = 0x00;   P5M0 = 0x00;   //设置为准双向口
-    P6M1 = 0x00;   P6M0 = 0x00;   //设置为准双向口
-    P7M1 = 0x00;   P7M0 = 0x00;   //设置为准双向口
-
-    UART2_config(2);    // 选择波特率, 2: 使用Timer2做波特率, 其它值: 无效.
-    EA = 1;             //允许全局中断
-    
-    PrintString21("AI8051U UART2 Test Programme!\r\n");  //UART2发送一个字符串
-
-    while (1)
-    {
-    }
-	
-	
-	return;
 	EAXSFR(); /* 扩展寄存器访问使能 */
-
+	WTST = 0; // 设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
+	CKCON = 0; // 提高访问XRAM速度
 
 	// 初始化GPIO
 	GPIO_config();
+	begainSelfCheck();
 	// 初始化外部中断
 	Exti_config();
-	// 初始化UART
-	UART_config();
 	// 初始化定时器
 	Timer_config();
+	// 初始化UART
+	UART_config();
 	// 初始化ADC
-	//ADC_config();
+	ADC_config();
 	// 初始化PWM
 	//PWM_config();
 	// 启用全局中断
@@ -781,6 +720,7 @@ void main(void)
 	PrintString2("STC8051 Solar Charging Lamp Programme!\r\n"); // UART2发送一个字符串
 	#endif
 
+	endSelfCheck();
 	// 初始化命令菜单状态
 	cmd_Menu = CMD_None_Led;
 	while (1)
@@ -800,6 +740,35 @@ void main(void)
 }
 
 void ______Hal__FunctionSet() {}
+
+//开机自检
+void begainSelfCheck()
+{
+	// 检测IO口状态
+	delay_ms(250);
+	IO_LED_WORKLED = IO_LED_ERR = POW_LED_OPEN;
+	BAT_POW_LED1 = BAT_POW_LED2 = BAT_POW_LED3 = BAT_POW_LED4 = POW_LED_OPEN;
+	delay_ms(250);
+}
+
+void endSelfCheck()
+{
+	delay_ms(250);
+	delay_ms(250);
+	delay_ms(250);
+	delay_ms(250);
+	IO_LED_WORKLED = IO_LED_ERR = POW_LED_CLOSE;
+	BAT_POW_LED1 = BAT_POW_LED2 = BAT_POW_LED3 = BAT_POW_LED4 = POW_LED_CLOSE;
+
+	delay_ms(250);
+	delay_ms(250);
+	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = IO_LED_RGB = POW_LED_OPEN;
+	//大功率LED灯，闪一下
+	delay_ms(250);
+	delay_ms(250);
+	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = IO_LED_RGB = POW_LED_CLOSE;
+}
+
 // 设置LED的亮度级别
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 {
@@ -1005,7 +974,7 @@ void displayBatterPower(float inVol)
 void KeyScan(void)
 {
 	//Key1 单纯短按按键
-	if (!KEY1)
+	if (!KEY1)  //低电平检测
 	{
 		if (!Key1_Flag)
 		{

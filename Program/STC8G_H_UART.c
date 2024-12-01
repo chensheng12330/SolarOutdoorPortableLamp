@@ -141,7 +141,18 @@ u8 UART_Configuration(u8 UARTx, COMx_InitDefine *COMx)
 			T2L = (u8)j;
 			IE2  &= ~(1<<2);	//禁止中断
 			AUXR |=  (1<<4);	//Timer run enable
-			S2CFG |= 0x01;
+			
+			P4NCS = 0x00; P4IE = 0xff;
+			P4M0 = 0x00; P4M1 = 0x00;
+			P4PU = 0x80;
+			S2_S = 1;
+			S2CFG = 0x01;     //W1 = 1;
+		  S2CON = 0x50;                  //8位数据,可变波特率
+			AUXR |= 0x04;                  //定时器时钟1T模式
+			T2L = 0xD0;                    //设置定时初始值
+			T2H = 0xFF;                    //设置定时初始值
+			AUXR |= 0x10;                  //定时器2开始计时
+			ES2  = 1;
 		}
 		else	return FAIL;	//模式错误
 		UART2_RxEnable(COMx->UART_RxEnable);	//UART接收使能

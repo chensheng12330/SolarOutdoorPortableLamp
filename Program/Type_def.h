@@ -56,8 +56,8 @@ typedef unsigned long   uint32; // 32 bits
 #define	I2C_Mode_Master			1
 #define	I2C_Mode_Slave			0
 
-#define	PIE			0x20	//1: 比较结果由0变1, 产生上升沿中断
-#define	NIE			0x10	//1: 比较结果由1变0, 产生下降沿中断
+//#define	PIE			0x20	//1: 比较结果由0变1, 产生上升沿中断
+//#define	NIE			0x10	//1: 比较结果由1变0, 产生下降沿中断
 
 #define	PWMA	128
 #define	PWMB	129
