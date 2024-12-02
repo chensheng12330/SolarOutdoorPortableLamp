@@ -384,6 +384,11 @@
               <FileType>1</FileType>
               <FilePath>.\STC8H_PWM.c</FilePath>
             </File>
+            <File>
+              <FileName>WS2812B-UART1-SPI-DMA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\WS2812B-UART1-SPI-DMA.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

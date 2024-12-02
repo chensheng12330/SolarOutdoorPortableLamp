@@ -49,6 +49,7 @@
 #include "STC8G_H_Switch.h"
 #include "STC8G_H_Timer.h"
 #include "STC8G_H_Exti.h"
+#include "WS2812B-UART1-SPI-DMA.h"
 
 void KeyScan(void);
 void displayBatterPower(float inVol);
@@ -680,7 +681,8 @@ void menuCheck()
 			}
 
 			// 设置
-			setPWMWithLEDBrightness(pwm_DutyLevel);
+			//setPWMWithLEDBrightness(pwm_DutyLevel);
+			run_ws2812b();
 		}
 
 		// Key3长按, 开启-关闭
@@ -692,11 +694,14 @@ void menuCheck()
 			{
 				rgbMode = RGB_MODE_1;
 				//SysOpen();
+				run_ws2812b();
 			}
 			else
 			{
 				rgbMode = RGB_MODE_Close;
 				//SysClose();
+				run_ws2812b();
+				
 			}
 			PrintfString2("rgb Mode: %hd", rgbMode);
 		}
@@ -724,6 +729,8 @@ void main(void)
 	// 初始化PWM
 	//PWM_config();
 	// 启用全局中断
+	// 初始化UART1-SPI
+	ws2812b_init();
 	EA = 1;
 
 	#ifdef DEBUG_MODE
