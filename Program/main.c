@@ -52,6 +52,7 @@
 #include "WS2812B-UART1-SPI-DMA.h"
 
 void KeyScan(void);
+void showBatterVoltageLow();
 void displayBatterPower(float inVol);
 void SysOpen();
 void SysClose();
@@ -240,7 +241,9 @@ void GPIO_config(void)
 	// p1-[1~7] 推挽输出，控制MOS管
 	P1M0 = 0xfe;
 	P1M1 = 0x01;
-	P1PU = 0xfe;
+	//P1PU = 0x00;
+	P0PU = 0x00;
+	P0PD = 0x00;
 
 	P2M0 = 0x00;
 	P2M1 = 0xff;
@@ -271,6 +274,9 @@ void GPIO_config(void)
 	// P1 = 0;
 	// PWM 双向IO
 	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = IO_LED_RGB = POW_LED_CLOSE;
+	
+	// RGB模式，启动为关闭状态
+	rgbMode == RGB_MODE_Close;
 
 	/*
 		GPIO_InitTypeDef GPIO_InitStructureADC;		//结构定义
@@ -431,6 +437,13 @@ void Timer1_ISR_Handler(void) interrupt TMR1_VECTOR // 进中断时已经清除�
 
 void PWM_config(void)
 {
+	/**
+
+	 1.3:IO-White | QSPIIO2/PWM6_2/PWM2N/CP0/TxD2/ADC3/P1.3
+  	1.4:IO-RED   | i2sws2/QSPINCS/PWM3P/CCP1/sda2/SS/ADC4/P1.4
+  	1.5:IO-YELLO | 2ssd2/QSPIIO0/pwm72/PWM3N/scl2/MOSI/ADC5/P1.5
+  	1.6:IO-BLUE  | I2SMCLK_4/I2SMCLK_2/QSPIIO1/PWM4P/MISO/RxD_3/ADC6/P1.6
+	 */
 
 	PWMx_InitDefine PWMx_InitStructure;
 
@@ -671,14 +684,6 @@ void menuCheck()
 			// cmd_Menu = CMD_Warn_Led;
 			Key3_Short_Function = 0;
 			PrintString2("Key3 short pressed.\r\n");
-			if ((pwm_DutyLevel + 1) > 4)
-			{
-				pwm_DutyLevel = PWM_Duty_Level_100;
-			}
-			else
-			{
-				pwm_DutyLevel++;
-			}
 
 			// 设置
 			//setPWMWithLEDBrightness(pwm_DutyLevel);
@@ -693,14 +698,12 @@ void menuCheck()
 			if (rgbMode == RGB_MODE_Close)
 			{
 				rgbMode = RGB_MODE_1;
-				//SysOpen();
 				run_ws2812b();
 			}
 			else
 			{
 				rgbMode = RGB_MODE_Close;
-				//SysClose();
-				run_ws2812b();
+				stop_ws2812b();
 				
 			}
 			PrintfString2("rgb Mode: %hd", rgbMode);
@@ -727,10 +730,10 @@ void main(void)
 	// 初始化ADC
 	ADC_config();
 	// 初始化PWM
-	//PWM_config();
-	// 启用全局中断
-	// 初始化UART1-SPI
+	PWM_config();
+	// 初始化ws2812b
 	ws2812b_init();
+	// 启用全局中断
 	EA = 1;
 
 	#ifdef DEBUG_MODE
@@ -787,6 +790,7 @@ void endSelfCheck()
 	//大功率LED灯，闪一下
 	delay_ms(250);
 	delay_ms(250);
+	//关闭所有照明LED
 	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = IO_LED_RGB = POW_LED_CLOSE;
 }
 
@@ -836,7 +840,6 @@ void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 		PWMA_Duty2(curPWMDuty);
 		PWMA_Duty3(curPWMDuty);
 		PWMA_Duty4(curPWMDuty);
-		// PrintString2("Update PWM Duty...");
 		PrintfString2("Update PWM Duty: %d \r\n", curPWMDuty);
 	}
 }
@@ -903,6 +906,12 @@ void turnOnLEDWithCMDType(enum CMDMenu cmdMenu)
 	}
 
 	return;
+}
+
+//电量不足警示灯
+void showBatterVoltageLow()
+{
+	IO_LED_ERR = POW_LED_OPEN;
 }
 
 /**
@@ -978,6 +987,10 @@ void displayBatterPower(float inVol)
 
 	default:
 		break;
+	}
+
+	if(level==0){
+		showBatterVoltageLow();
 	}
 
 	PrintfString2("Battery level: %d", level);

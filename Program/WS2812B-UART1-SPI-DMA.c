@@ -53,13 +53,14 @@ SPI数据低半字节对应的WS2812数据0-->0x08, 数据1-->0x0e,
 /*************	本地函数声明	**************/
 
 #define	COLOR	50				//亮度，最大255
-#define	LED_NUM	8				//LED灯个数
+#define	LED_NUM	9				//LED灯个数
 #define	SPI_NUM	(LED_NUM*12)	//LED灯对应SPI字节数
 
 u8	xdata  led_RGB[LED_NUM][3];	//LED对应的RGB，led_buff[i][0]-->绿，led_buff[i][1]-->红，led_buff[i][0]-->蓝.
 u8	xdata  led_SPI[SPI_NUM];	//LED灯对应SPI字节数
 
 bit	B_UR1T_DMA_busy;	//UR1T-DMA忙标志
+bit B_Run_ws2812b;
 
 
 /*************  外部函数和变量声明 *****************/
@@ -87,16 +88,35 @@ void ws2812b_init(void)
 	//SPI_speed: SPI的速度, 0: fosc/4,  1: fosc/8,  2: fosc/16,  3: fosc/2
 }
 
+void stop_ws2812b(void)
+{
+	u8	xdata *px;
+	u16	i;
+	
+	B_Run_ws2812b = FALSE;
+	
+	while(B_UR1T_DMA_busy)	;	//等待DMA完成
+
+	px = &led_RGB[0][0];	//亮度(颜色)首地址
+	for(i=0; i<(LED_NUM*3); i++, px++)	*px = 0;	//清除所有的颜色
+	LoadSPI();										// 将颜色装载到SPI数据
+	UR1T_DMA_TRIG(led_SPI, SPI_NUM);
+
+	while (B_UR1T_DMA_busy); // 等待DMA完成
+	PrintfString2("stop_ws2812b");
+}
+
 void run_ws2812b(void)
 {
 	u16	i,k,times ;
 	u8	xdata *px;
 	
 	k = 0;		//
-	times = 500; 
-	
+	times = 5;
+	B_Run_ws2812b = TRUE;
+
 	PrintfString2("run_ws2812b");
-	while (times--)
+	while (times-- && B_Run_ws2812b)
 	{
 		while(B_UR1T_DMA_busy)	;	//等待DMA完成
 
@@ -117,6 +137,8 @@ void run_ws2812b(void)
 	//	if(--k >= LED_NUM)	k = LED_NUM-1;	//逆时针
 		delay_s(2);
 	}
+	
+	stop_ws2812b();
 	PrintfString2("stop_ws2812b");
 }
 
