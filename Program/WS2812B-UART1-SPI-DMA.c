@@ -53,7 +53,7 @@ SPI数据低半字节对应的WS2812数据0-->0x08, 数据1-->0x0e,
 /*************	本地函数声明	**************/
 
 #define	COLOR	50				//亮度，最大255
-#define	LED_NUM	9				//LED灯个数
+#define	LED_NUM	8				//LED灯个数
 #define	SPI_NUM	(LED_NUM*12)	//LED灯对应SPI字节数
 
 u8	xdata  led_RGB[LED_NUM][3];	//LED对应的RGB，led_buff[i][0]-->绿，led_buff[i][1]-->红，led_buff[i][0]-->蓝.
@@ -112,7 +112,7 @@ void run_ws2812b(void)
 	u8	xdata *px;
 	
 	k = 0;		//
-	times = 5;
+	times = 10;
 	B_Run_ws2812b = TRUE;
 
 	PrintfString2("run_ws2812b");
@@ -319,5 +319,4 @@ void UR1T_DMA_ISR (void) interrupt DMA_UR1T_VECTOR
 	DMA_UR1T_STA = 0;		//清除中断标志
 	DMA_UR1T_CR  = 0;
 	B_UR1T_DMA_busy = 0;		//清除SPI-DMA忙标志，SPI DMA中断中清除此标志，使用SPI DMA前要确认此标志为0
-	PrintfString2("#");
 }
