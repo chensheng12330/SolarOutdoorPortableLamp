@@ -7,7 +7,7 @@
 /* --- Web: www.STCAI.com ---------------------------------------------*/
 /* --- BBS: www.STCAIMCU.com  -----------------------------------------*/
 /* --- QQ:  800003751 -------------------------------------------------*/
-/* Èç¹ûÒªÔÚ³ÌÐòÖÐÊ¹ÓÃ´Ë´úÂë,ÇëÔÚ³ÌÐòÖÐ×¢Ã÷Ê¹ÓÃÁËSTCµÄ×ÊÁÏ¼°³ÌÐò            */
+/* ï¿½ï¿½ï¿½Òªï¿½Ú³ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã´Ë´ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½STCï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ï¿½ï¿½            */
 /*---------------------------------------------------------------------*/
 
 #ifndef	__STC8G_H_NVIC_H
@@ -16,67 +16,67 @@
 #include	"config.h"
 
 //========================================================================
-//                              ¶¨ÒåÉùÃ÷
+//                              ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define	FALLING_EDGE		1		//²úÉúÏÂ½µÑØÖÐ¶Ï
-#define	RISING_EDGE			2		//²úÉúÉÏÉýÑØÖÐ¶Ï
+#define	FALLING_EDGE		1		//ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
+#define	RISING_EDGE			2		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
 
 //========================================================================
-//                              ¶¨Ê±Æ÷ÖÐ¶ÏÉèÖÃ
+//                              ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define 	Timer0_Interrupt(n)		(n==0?(ET0 = 0):(ET0 = 1))				/* Timer0ÖÐ¶ÏÊ¹ÄÜ */
-#define 	Timer1_Interrupt(n)		(n==0?(ET1 = 0):(ET1 = 1))				/* Timer1ÖÐ¶ÏÊ¹ÄÜ */
-#define 	Timer2_Interrupt(n)		IE2 = (IE2 & ~0x04) | (n << 2)			/* Timer2ÖÐ¶ÏÊ¹ÄÜ */
-#define 	Timer3_Interrupt(n)		IE2 = (IE2 & ~0x20) | (n << 5)			/* Timer3ÖÐ¶ÏÊ¹ÄÜ */
-#define 	Timer4_Interrupt(n)		IE2 = (IE2 & ~0x40) | (n << 6)			/* Timer4ÖÐ¶ÏÊ¹ÄÜ */
+#define 	Timer0_Interrupt(n)		(n==0?(ET0 = 0):(ET0 = 1))				/* Timer0ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	Timer1_Interrupt(n)		(n==0?(ET1 = 0):(ET1 = 1))				/* Timer1ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	Timer2_Interrupt(n)		IE2 = (IE2 & ~0x04) | (n << 2)			/* Timer2ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	Timer3_Interrupt(n)		IE2 = (IE2 & ~0x20) | (n << 5)			/* Timer3ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	Timer4_Interrupt(n)		IE2 = (IE2 & ~0x40) | (n << 6)			/* Timer4ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
 
 //========================================================================
-//                             Íâ²¿ÖÐ¶ÏÉèÖÃ
+//                             ï¿½â²¿ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define 	INT0_Interrupt(n)		(n==0?(EX0 = 0):(EX0 = 1))			/* INT0ÖÐ¶ÏÊ¹ÄÜ */
-#define 	INT1_Interrupt(n)		(n==0?(EX1 = 0):(EX1 = 1))			/* INT1ÖÐ¶ÏÊ¹ÄÜ */
-#define 	INT2_Interrupt(n)		INTCLKO = (INTCLKO & ~0x10) | (n << 4)	/* INT2ÖÐ¶ÏÊ¹ÄÜ */
-#define 	INT3_Interrupt(n)		INTCLKO = (INTCLKO & ~0x20) | (n << 5)	/* INT3ÖÐ¶ÏÊ¹ÄÜ */
-#define 	INT4_Interrupt(n)		INTCLKO = (INTCLKO & ~0x40) | (n << 6)	/* INT4ÖÐ¶ÏÊ¹ÄÜ */
+#define 	INT0_Interrupt(n)		(n==0?(EX0 = 0):(EX0 = 1))			/* INT0ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	INT1_Interrupt(n)		(n==0?(EX1 = 0):(EX1 = 1))			/* INT1ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	INT2_Interrupt(n)		INTCLKO = (INTCLKO & ~0x10) | (n << 4)	/* INT2ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	INT3_Interrupt(n)		INTCLKO = (INTCLKO & ~0x20) | (n << 5)	/* INT3ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define 	INT4_Interrupt(n)		INTCLKO = (INTCLKO & ~0x40) | (n << 6)	/* INT4ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
 
 //========================================================================
-//                              ADCÖÐ¶ÏÉèÖÃ
+//                              ADCï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define 	ADC_Interrupt(n)		(n==0?(EADC = 0):(EADC = 1))	/* ADCÖÐ¶Ï¿ØÖÆ */
+#define 	ADC_Interrupt(n)		(n==0?(EADC = 0):(EADC = 1))	/* ADCï¿½Ð¶Ï¿ï¿½ï¿½ï¿½ */
 
 //========================================================================
-//                              SPIÖÐ¶ÏÉèÖÃ
+//                              SPIï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define 	SPI_Interrupt(n)		IE2 = (IE2 & ~0x02) | (n << 1)	/* SPIÖÐ¶ÏÊ¹ÄÜ */
+#define 	SPI_Interrupt(n)		IE2 = (IE2 & ~0x02) | (n << 1)	/* SPIï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
 
 //========================================================================
-//                              I2CÖÐ¶ÏÉèÖÃ
+//                              I2Cï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define		I2C_Master_Inturrupt(n)	(n==0?(I2CMSCR &= ~0x80):(I2CMSCR |= 0x80))	//0£º½ûÖ¹ I2C ¹¦ÄÜ£»1£ºÊ¹ÄÜ I2C ¹¦ÄÜ
+#define		I2C_Master_Inturrupt(n)	(n==0?(I2CMSCR &= ~0x80):(I2CMSCR |= 0x80))	//0ï¿½ï¿½ï¿½ï¿½Ö¹ I2C ï¿½ï¿½ï¿½Ü£ï¿½1ï¿½ï¿½Ê¹ï¿½ï¿½ I2C ï¿½ï¿½ï¿½ï¿½
 
 //========================================================================
-//                              UARTÖÐ¶ÏÉèÖÃ
+//                              UARTï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define		UART1_Interrupt(n)	(n==0?(ES = 0):(ES = 1))			/* UART1ÖÐ¶ÏÊ¹ÄÜ */
-#define		UART2_Interrupt(n)	IE2 = (IE2 & ~0x01) | (n)			/* UART2ÖÐ¶ÏÊ¹ÄÜ */
-#define		UART3_Interrupt(n)	IE2 = (IE2 & ~0x08) | (n << 3)		/* UART3ÖÐ¶ÏÊ¹ÄÜ */
-#define		UART4_Interrupt(n)	IE2 = (IE2 & ~0x10) | (n << 4)		/* UART4ÖÐ¶ÏÊ¹ÄÜ */
+#define		UART1_Interrupt(n)	(n==0?(ES = 0):(ES = 1))			/* UART1ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define		UART2_Interrupt(n)	IE2 = (IE2 & ~0x01) | (n)			/* UART2ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define		UART3_Interrupt(n)	IE2 = (IE2 & ~0x08) | (n << 3)		/* UART3ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
+#define		UART4_Interrupt(n)	IE2 = (IE2 & ~0x10) | (n << 4)		/* UART4ï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
 
 //========================================================================
-//                              RTCÖÐ¶ÏÉèÖÃ
+//                              RTCï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
-#define 	RTC_Interrupt(n)		RTCIEN = (n)		/* RTCÖÐ¶ÏÊ¹ÄÜ */
+#define 	RTC_Interrupt(n)		RTCIEN = (n)		/* RTCï¿½Ð¶ï¿½Ê¹ï¿½ï¿½ */
 
 //========================================================================
-//                            ÖÐ¶ÏÓÅÏÈ¼¶¶¨Òå
+//                            ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
 //                                           7      6      5      4      3      2      1      0      Reset Value
@@ -108,76 +108,76 @@
 #define		PSPIH		0x02
 #define		PS2H		0x01
 
-//´®¿Ú2ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½ï¿½ï¿½2ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	UART2_Priority(n)			do{if(n == 0) IP2H &= ~PS2H, IP2 &= ~PS2; \
 																if(n == 1) IP2H &= ~PS2H, IP2 |= PS2; \
 																if(n == 2) IP2H |= PS2H, IP2 &= ~PS2; \
 																if(n == 3) IP2H |= PS2H, IP2 |= PS2; \
 															}while(0)
-//SPIÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//SPIï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	SPI_Priority(n)				do{if(n == 0) IP2H &= ~PSPIH, IP2 &= ~PSPI; \
 																if(n == 1) IP2H &= ~PSPIH, IP2 |= PSPI; \
 																if(n == 2) IP2H |= PSPIH, IP2 &= ~PSPI; \
 																if(n == 3) IP2H |= PSPIH, IP2 |= PSPI; \
 															}while(0)
-//Íâ²¿ÖÐ¶Ï4ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½â²¿ï¿½Ð¶ï¿½4ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	INT4_Priority(n)			do{if(n == 0) IP2H &= ~PX4H, IP2 &= ~PX4; \
 																if(n == 1) IP2H &= ~PX4H, IP2 |= PX4; \
 																if(n == 2) IP2H |= PX4H, IP2 &= ~PX4; \
 																if(n == 3) IP2H |= PX4H, IP2 |= PX4; \
 															}while(0)
-//±È½ÏÆ÷ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½È½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	CMP_Priority(n)				do{if(n == 0) IP2H &= ~PCMPH, IP2 &= ~PCMP; \
 																if(n == 1) IP2H &= ~PCMPH, IP2 |= PCMP; \
 																if(n == 2) IP2H |= PCMPH, IP2 &= ~PCMP; \
 																if(n == 3) IP2H |= PCMPH, IP2 |= PCMP; \
 															}while(0)
-//I2CÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//I2Cï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	I2C_Priority(n)				do{if(n == 0) IP2H &= ~PI2CH, IP2 &= ~PI2C; \
 																if(n == 1) IP2H &= ~PI2CH, IP2 |= PI2C; \
 																if(n == 2) IP2H |= PI2CH, IP2 &= ~PI2C; \
 																if(n == 3) IP2H |= PI2CH, IP2 |= PI2C; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM0ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM0ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM0_Priority(n)			do{if(n == 0) IP2H &= ~PPWM0H, IP2 &= ~PPWM0; \
 																if(n == 1) IP2H &= ~PPWM0H, IP2 |= PPWM0; \
 																if(n == 2) IP2H |= PPWM0H, IP2 &= ~PPWM0; \
 																if(n == 3) IP2H |= PPWM0H, IP2 |= PPWM0; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM0Òì³£¼ì²âÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM0ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM0FD_Priority(n)			do{if(n == 0) IP2H &= ~PPWM0FDH, IP2 &= ~PPWM0FD; \
 																if(n == 1) IP2H &= ~PPWM0FDH, IP2 |= PPWM0FD; \
 																if(n == 2) IP2H |= PPWM0FDH, IP2 &= ~PPWM0FD; \
 																if(n == 3) IP2H |= PPWM0FDH, IP2 |= PPWM0FD; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM2Òì³£¼ì²âÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM2ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM2FD_Priority(n)			do{if(n == 0) IP2H &= ~PPWM2FDH, IP2 &= ~PPWM2FD; \
 																if(n == 1) IP2H &= ~PPWM2FDH, IP2 |= PPWM2FD; \
 																if(n == 2) IP2H |= PPWM2FDH, IP2 &= ~PPWM2FD; \
 																if(n == 3) IP2H |= PPWM2FDH, IP2 |= PPWM2FD; \
 															}while(0)
-//´¥Ãþ°´¼üÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PTKSU_Priority(n)			do{if(n == 0) IP2H &= ~PTKSUH, IP2 &= ~PTKSU; \
 																if(n == 1) IP2H &= ~PTKSUH, IP2 |= PTKSU; \
 																if(n == 2) IP2H |= PTKSUH, IP2 &= ~PTKSU; \
 																if(n == 3) IP2H |= PTKSUH, IP2 |= PTKSU; \
 															}while(0)
 
-//USBÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//USBï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	USB_Priority(n)				do{if(n == 0) IP2H &= ~PUSBH, IP2 &= ~PUSB; \
 																if(n == 1) IP2H &= ~PUSBH, IP2 |= PUSB; \
 																if(n == 2) IP2H |= PUSBH, IP2 &= ~PUSB; \
 																if(n == 3) IP2H |= PUSBH, IP2 |= PUSB; \
 															}while(0)
 
-//¸ß¼¶PWMAÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ß¼ï¿½PWMAï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWMA_Priority(n)			do{if(n == 0) IP2H &= ~PPWMAH, IP2 &= ~PPWMA; \
 																if(n == 1) IP2H &= ~PPWMAH, IP2 |= PPWMA; \
 																if(n == 2) IP2H |= PPWMAH, IP2 &= ~PPWMA; \
 																if(n == 3) IP2H |= PPWMAH, IP2 |= PPWMA; \
 															}while(0)
 
-//¸ß¼¶PWMBÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ß¼ï¿½PWMBï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWMB_Priority(n)			do{if(n == 0) IP2H &= ~PPWMBH, IP2 &= ~PPWMB; \
 																if(n == 1) IP2H &= ~PPWMBH, IP2 |= PPWMB; \
 																if(n == 2) IP2H |= PPWMBH, IP2 &= ~PPWMB; \
@@ -208,57 +208,57 @@
 #define		PS4H		0x02
 #define		PS3H		0x01
 
-//RTCÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//RTCï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	RTC_Priority(n)				do{if(n == 0) IP3H &= ~PRTCH, IP3 &= ~PRTC; \
 																if(n == 1) IP3H &= ~PRTCH, IP3 |= PRTC; \
 																if(n == 2) IP3H |= PRTCH, IP3 &= ~PRTC; \
 																if(n == 3) IP3H |= PRTCH, IP3 |= PRTC; \
 															}while(0)
 
-//ÔöÇ¿ÐÍPWM1ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM1ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM1_Priority(n)			do{if(n == 0) IP3H &= ~PPWM1H, IP3 &= ~PPWM1; \
 																if(n == 1) IP3H &= ~PPWM1H, IP3 |= PPWM1; \
 																if(n == 2) IP3H |= PPWM1H, IP3 &= ~PPWM1; \
 																if(n == 3) IP3H |= PPWM1H, IP3 |= PPWM1; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM2ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM2ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM2_Priority(n)			do{if(n == 0) IP3H &= ~PPWM2H, IP3 &= ~PPWM2; \
 																if(n == 1) IP3H &= ~PPWM2H, IP3 |= PPWM2; \
 																if(n == 2) IP3H |= PPWM2H, IP3 &= ~PPWM2; \
 																if(n == 3) IP3H |= PPWM2H, IP3 |= PPWM2; \
 															}while(0)
 
-//ÔöÇ¿ÐÍPWM3ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM3ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM3_Priority(n)			do{if(n == 0) IP3H &= ~PPWM3H, IP3 &= ~PPWM3; \
 																if(n == 1) IP3H &= ~PPWM3H, IP3 |= PPWM3; \
 																if(n == 2) IP3H |= PPWM3H, IP3 &= ~PPWM3; \
 																if(n == 3) IP3H |= PPWM3H, IP3 |= PPWM3; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM4ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM4ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM4_Priority(n)			do{if(n == 0) IP3H &= ~PPWM4H, IP3 &= ~PPWM4; \
 																if(n == 1) IP3H &= ~PPWM4H, IP3 |= PPWM4; \
 																if(n == 2) IP3H |= PPWM4H, IP3 &= ~PPWM4; \
 																if(n == 3) IP3H |= PPWM4H, IP3 |= PPWM4; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM5ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM5ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM5_Priority(n)			do{if(n == 0) IP3H &= ~PPWM5H, IP3 &= ~PPWM5; \
 																if(n == 1) IP3H &= ~PPWM5H, IP3 |= PPWM5; \
 																if(n == 2) IP3H |= PPWM5H, IP3 &= ~PPWM5; \
 																if(n == 3) IP3H |= PPWM5H, IP3 |= PPWM5; \
 															}while(0)
-//ÔöÇ¿ÐÍPWM4Òì³£¼ì²âÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ç¿ï¿½ï¿½PWM4ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	PWM4FD_Priority(n)			do{if(n == 0) IP3H &= ~PPWM4FDH, IP3 &= ~PPWM4FD; \
 																if(n == 1) IP3H &= ~PPWM4FDH, IP3 |= PPWM4FD; \
 																if(n == 2) IP3H |= PPWM4FDH, IP3 &= ~PPWM4FD; \
 																if(n == 3) IP3H |= PPWM4FDH, IP3 |= PPWM4FD; \
 															}while(0)
-//´®¿Ú3ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½ï¿½ï¿½3ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	UART3_Priority(n)			do{if(n == 0) IP3H &= ~PS3H, IP3 &= ~PS3; \
 																if(n == 1) IP3H &= ~PS3H, IP3 |= PS3; \
 																if(n == 2) IP3H |= PS3H, IP3 &= ~PS3; \
 																if(n == 3) IP3H |= PS3H, IP3 |= PS3; \
 															}while(0)
-//´®¿Ú4ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½ï¿½ï¿½4ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	UART4_Priority(n)			do{if(n == 0) IP3H &= ~PS4H, IP3 &= ~PS4; \
 																if(n == 1) IP3H &= ~PS4H, IP3 |= PS4; \
 																if(n == 2) IP3H |= PS4H, IP3 &= ~PS4; \
@@ -267,7 +267,7 @@
 
 
 //                                           7      6      5      4      3      2      1      0      Reset Value
-//sfr IPH   = 0xB7; //ÖÐ¶ÏÓÅÏÈ¼¶¸ßÎ»       PPCAH  PLVDH   PADCH   PSH   PT1H    PX1H   PT0H   PX0H    0000,0000
+//sfr IPH   = 0xB7; //ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½Î»       PPCAH  PLVDH   PADCH   PSH   PT1H    PX1H   PT0H   PX0H    0000,0000
 //#define		PPCAH	0x80
 #define		PLVDH	0x40
 #define		PADCH	0x20
@@ -277,50 +277,50 @@
 #define		PT0H	0x02
 #define		PX0H	0x01
 
-//Íâ²¿ÖÐ¶Ï0ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½â²¿ï¿½Ð¶ï¿½0ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	INT0_Priority(n)			do{if(n == 0) IPH &= ~PX0H, PX0 = 0; \
 																if(n == 1) IPH &= ~PX0H, PX0 = 1; \
 																if(n == 2) IPH |= PX0H, PX0 = 0; \
 																if(n == 3) IPH |= PX0H, PX0 = 1; \
 															}while(0)
-//Íâ²¿ÖÐ¶Ï1ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½â²¿ï¿½Ð¶ï¿½1ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	INT1_Priority(n)			do{if(n == 0) IPH &= ~PX1H, PX1 = 0; \
 																if(n == 1) IPH &= ~PX1H, PX1 = 1; \
 																if(n == 2) IPH |= PX1H, PX1 = 0; \
 																if(n == 3) IPH |= PX1H, PX1 = 1; \
 															}while(0)
-//¶¨Ê±Æ÷0ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ê±ï¿½ï¿½0ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	Timer0_Priority(n)			do{if(n == 0) IPH &= ~PT0H, PT0 = 0; \
 																if(n == 1) IPH &= ~PT0H, PT0 = 1; \
 																if(n == 2) IPH |= PT0H, PT0 = 0; \
 																if(n == 3) IPH |= PT0H, PT0 = 1; \
 															}while(0)
-//¶¨Ê±Æ÷1ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ê±ï¿½ï¿½1ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	Timer1_Priority(n)			do{if(n == 0) IPH &= ~PT1H, PT1 = 0; \
 																if(n == 1) IPH &= ~PT1H, PT1 = 1; \
 																if(n == 2) IPH |= PT1H, PT1 = 0; \
 																if(n == 3) IPH |= PT1H, PT1 = 1; \
 															}while(0)
-//´®¿Ú1ÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½ï¿½ï¿½1ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	UART1_Priority(n)			do{if(n == 0) IPH &= ~PSH, PS = 0; \
 																if(n == 1) IPH &= ~PSH, PS = 1; \
 																if(n == 2) IPH |= PSH, PS = 0; \
 																if(n == 3) IPH |= PSH, PS = 1; \
 															}while(0)
-//ADCÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ADCï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	ADC_Priority(n)				do{if(n == 0) IPH &= ~PADCH, PADC = 0; \
 																if(n == 1) IPH &= ~PADCH, PADC = 1; \
 																if(n == 2) IPH |= PADCH, PADC = 0; \
 																if(n == 3) IPH |= PADCH, PADC = 1; \
 															}while(0)
-//µÍÑ¹¼ì²âÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ
+//ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½
 #define 	LVD_Priority(n)				do{if(n == 0) IPH &= ~PLVDH, PADC = 0; \
 																if(n == 1) IPH &= ~PLVDH, PADC = 1; \
 																if(n == 2) IPH |= PLVDH, PADC = 0; \
 																if(n == 3) IPH |= PLVDH, PADC = 1; \
 															}while(0)
 /*
-//CCP/PCA/PWMÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆ - ·Åµ½"STC8G_PCA"ÎÄ¼þ
+//CCP/PCA/PWMï¿½Ð¶ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Åµï¿½"STC8G_PCA"ï¿½Ä¼ï¿½
 #define 	PCA_Priority(n)				do{if(n == 0) IPH &= ~PPCAH, PPCA = 0; \
 																if(n == 1) IPH &= ~PPCAH, PPCA = 1; \
 																if(n == 2) IPH |= PPCAH, PPCA = 0; \
@@ -329,7 +329,7 @@
 */
 
 //========================================================================
-//                           Íâ²¿º¯ÊýºÍ±äÁ¿ÉùÃ÷
+//                           ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //========================================================================
 
 u8 NVIC_Timer0_Init(u8 State, u8 Priority);

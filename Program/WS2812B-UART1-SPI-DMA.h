@@ -15,13 +15,15 @@
 
 typedef enum
 {
-    WS2812B_OFF  = 0,  //关闭状态
+    WS2812B_Close  = 0,  //关闭状态
     WS2812B_ON_1 = 1,
     WS2812B_ON_2 = 2,
     WS2812B_ON_3 = 3,
     WS2812B_ON_4 = 4,
     WS2812B_CLS  = 5  //清屏
 } WS2812B_Mode; // RGB显示模式
+
+extern WS2812B_Mode ws2812b_mode;
 
 // 初使化
 void ws2812b_init(void);
@@ -32,6 +34,7 @@ void ws2812b_runLoop(void);
 // 启动ws2812B 显示
 void ws2812b_run(void);
 void ws2812b_switch(WS2812B_Mode mode);
+void ws2812b_key_next(); //按键功能切换ws2812B模式
 
 //清屏，不显示任何颜色
 void ws2812b_clear();

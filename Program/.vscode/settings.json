@@ -7,6 +7,9 @@
         "stdio.h": "c",
         "STDIO.H": "cpp",
         "INTRINS.H": "cpp",
-        "stc8g_h_delay.h": "c"
+        "stc8g_h_delay.h": "c",
+        "ws2812b-uart1-spi-dma.h": "c",
+        "stc8g_h_timer.h": "c",
+        "stc8g_h_exti.h": "c"
     }
 }

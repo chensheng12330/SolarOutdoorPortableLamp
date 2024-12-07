@@ -139,13 +139,13 @@ u8 NVIC_INT0_Init(u8 State, u8 Priority)
 // 返回: 执行结果 SUCCESS/FAIL.
 // 版本: V1.0, 2020-09-29
 //========================================================================
-//u8 NVIC_INT2_Init(u8 State, u8 Priority)
-//{
-//	if(State > ENABLE) return FAIL;
-//	INT2_Interrupt(State);
-//	Priority = NULL;
-//	return SUCCESS;
-//}
+u8 NVIC_INT2_Init(u8 State, u8 Priority)
+{
+	if(State > ENABLE) return FAIL;
+	INT2_Interrupt(State);
+	Priority = NULL;
+	return SUCCESS;
+}
 
 //========================================================================
 // 函数: NVIC_INT3_Init

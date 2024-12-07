@@ -117,8 +117,11 @@ sbit IO_LED_ERR     = P1 ^ 2;	  // 程序出错LED灯、低电量灯
 
 // 按键
 sbit KEY1 = P3 ^ 7; // 主菜单按键
-sbit KEY2 = P3 ^ 6; // 亮度调节按键
-sbit KEY3 = P5 ^ 2; // RGB模式选择按键
+// sbit KEY2 = P3 ^ 6; // 亮度调节按键
+// sbit KEY3 = P5 ^ 2; // RGB模式选择按键
+sbit KEY2 = P5 ^ 2; // 亮度调节按键
+sbit KEY3 = P3 ^ 6; // RGB模式选择按键
+
 sbit RestartKey = P4 ^ 7; //重启
 
 // 3.0/3.1 烧写
@@ -206,16 +209,6 @@ enum CMDMenu
 
 enum CMDMenu cmd_Menu;
 
-enum RGBMode
-{
-	RGB_MODE_Close = 0, // 停止
-	RGB_MODE_1 = 1,		// 模式1
-	RGB_MODE_2 = 2,		// 模式2
-	RGB_MODE_3 = 3		// 模式3
-};
-
-enum RGBMode rgbMode;
-
 /*************	本地函数声明	**************/
 void turnOnLEDWithCMDType(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
@@ -275,9 +268,6 @@ void GPIO_config(void)
 	// PWM 双向IO
 	IO_LED_White = IO_LED_WarnRed = IO_LED_YELLO = IO_LED_WarnBlue = IO_LED_RGB = POW_LED_CLOSE;
 	
-	// RGB模式，启动为关闭状态
-	rgbMode == RGB_MODE_Close;
-
 	/*
 		GPIO_InitTypeDef GPIO_InitStructureADC;		//结构定义
 		GPIO_InitTypeDef GPIO_InitStructureDebug;
@@ -320,11 +310,15 @@ void Exti_config(void)
 
 	Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
 	Ext_Inilize(EXT_INT3, &Exti_InitStructure);	  // 初始化
-	NVIC_INT3_Init(ENABLE, Priority_3);			  // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3									
+	Ext_Inilize(EXT_INT2, &Exti_InitStructure);	  // 初始化
+
+	NVIC_INT3_Init(ENABLE, Priority_3);			  // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
+	NVIC_INT2_Init(ENABLE, Priority_3);
 }
 
 void INT3_ISR_Handler(void) interrupt INT3_VECTOR
 {
+	ws2812b_switch(WS2812B_CLS);
 	// 系统关闭状态
 	if (cmd_Menu == CMD_Sys_Close)
 	{
@@ -333,6 +327,14 @@ void INT3_ISR_Handler(void) interrupt INT3_VECTOR
 		SysOpen();
 	}
 	PrintString2("INT3 event");
+}
+
+void INT2_ISR_Handler(void) interrupt INT2_VECTOR
+{
+	PrintString2("INT2 event\r\n");
+	// 系统关闭状态
+	ws2812b_key_next();
+	PrintfString2("ws2812b_key_next: %hd", ws2812b_mode);
 }
 
 /******************* AD配置函数 *******************/
@@ -683,10 +685,11 @@ void menuCheck()
 		{
 			// cmd_Menu = CMD_Warn_Led;
 			Key3_Short_Function = 0;
-			PrintString2("Key3 short pressed.\r\n");
+			//PrintString2("Key3 short pressed.\r\n");
 
 			//RGB 下一功能
-			ws2812b_key_next();
+			//ws2812b_key_next();
+			//PrintfString2("ws2812b_key_next: %hd", ws2812b_mode);
 		}
 
 		// Key3长按, 开启-关闭
@@ -694,17 +697,16 @@ void menuCheck()
 		{
 			Key3_Long_Function = 0;
 			PrintString2("Key3 long pressed.\r\n");
-			if (rgbMode == RGB_MODE_Close)
+			if (ws2812b_mode == WS2812B_Close)
 			{
-				ws2812b_switch(WS2812B_ON_1);
+				//ws2812b_switch(WS2812B_ON_1);
 			}
 			else
 			{
-				rgbMode = RGB_MODE_Close;
-				ws2812b_stop
+				//ws2812b_stop();
 				
 			}
-			PrintfString2("rgb Mode: %hd", rgbMode);
+			//PrintfString2("ws2812b RGB Mode: %hd", ws2812b_mode);
 		}
 	}
 }

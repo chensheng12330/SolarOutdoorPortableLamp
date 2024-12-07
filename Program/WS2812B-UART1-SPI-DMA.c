@@ -69,6 +69,7 @@ void LoadSPI(void);
 void UART1_SPI_Config(u8 SPI_io, u8 SPI_speed);	//(SPI_io, SPI_speed), 参数:  SPI_io: 切换IO(SS MOSI MISO SCLK), 0: 切换到P1.4 P1.5 P1.6 P1.7,  1: 切换到P2.4 P2.5 P2.6 P2.7, 2: 切换到P4.0 P4.1 P4.2 P4.3,  3: 切换到P3.5 P3.4 P3.3 P3.2,
 													//                            SPI_speed: SPI的速度, 0: fosc/4,  1: fosc/8,  2: fosc/16,  3: fosc/2
 void UR1T_DMA_TRIG(u8 xdata *TxBuf, u16 num);
+void Fun_WS2812B_ON_1(void);
 
 /*************** 主函数 *******************************/
 
@@ -78,6 +79,7 @@ void ws2812b_init(void)
 	P2M0 = 0;
 	UART1_SPI_Config(1, 1);
 	B_UR1T_DMA_busy = 0;
+	ws2812b_mode = WS2812B_Close;
 	/*(SPI_io, SPI_speed), 参数: SPI_io: 切换IO(SS MOSI MISO SCLK), 
 	0: 切换到P1.4 P1.5 P1.6 P1.7,  
 	1: 切换到P2.4 P2.5 P2.6 P2.7, 
@@ -102,37 +104,37 @@ void ws2812b_clear(){
 	UR1T_DMA_TRIG(led_SPI, SPI_NUM);
 
 	ws2812b_mode = WS2812B_CLS;
-	return
+	return;
 }
 
 void ws2812b_stop(void)
 {
 	ws2812b_clear();
 	while (B_UR1T_DMA_busy); // 等待DMA完成
-	ws2812b_mode = WS2812B_OFF;
+	ws2812b_mode = WS2812B_Close;
 }
 
-void ws2812b_run(void) // 运行WS2812B驱动程序
+void ws2812b_runLoop(void)
 {
-	px = &led_RGB[0][0]; // 亮度(颜色)首地址
-	for (i = 0; i < (LED_NUM * 3); i++, px++)
-		*px = 0; // 清除所有的颜色
-
-	ws2812b_mode = WS2812B_ON_1;
-}
-
-void void ws2812b_runLoop(void)
-{
-	if (ws2812b_mode == WS2812B_OFF || B_UR1T_DMA_busy)
+	if (ws2812b_mode == WS2812B_Close || B_UR1T_DMA_busy)
 	{
 		//不做任何处理
 		return;
 	}
 
 	if(ws2812b_mode == WS2812B_ON_1){
-		WS2812B_ON_1();
+		Fun_WS2812B_ON_1();
 	}
 	else if(ws2812b_mode == WS2812B_ON_2){
+		Fun_WS2812B_ON_1();
+	}
+	else if (ws2812b_mode == WS2812B_ON_3)
+	{
+		Fun_WS2812B_ON_1();
+	}
+	else if (ws2812b_mode == WS2812B_ON_4)
+	{
+		Fun_WS2812B_ON_1();
 	}
 	else if (ws2812b_mode == WS2812B_CLS)
 	{
@@ -143,14 +145,18 @@ void void ws2812b_runLoop(void)
 }
 
 static u8 k = 0;
-void WS2812B_ON_1(void)
+void Fun_WS2812B_ON_1(void)
 {
 	u8	xdata *px;
 	u16	i;
 	
 	B_Run_ws2812b = TRUE;
 	
-	while(B_UR1T_DMA_busy);	//等待DMA完成
+	if(B_UR1T_DMA_busy){ //等待DMA完成
+		return;
+	}
+
+	while(B_UR1T_DMA_busy);	
 
 	px = &led_RGB[0][0]; // 亮度(颜色)首地址
 	for (i = 0; i < (LED_NUM * 3); i++, px++)
@@ -179,16 +185,23 @@ void ws2812b_switch(WS2812B_Mode mode)
 	ws2812b_mode = mode;
 }
 
-void ws2812b_key_next())
+void ws2812b_key_next()
 {
-	if (ws2812b_mode == WS2812B_CLS){
-		ws2812b_mode = WS2812B_OFF;
-		ws2812b_stop();
+	if (ws2812b_mode == WS2812B_Close)
+	{
+		ws2812b_mode = WS2812B_ON_1;
 	}
 	else {
 		ws2812b_mode += 1;
+		if (ws2812b_mode > WS2812B_CLS){
+			ws2812b_mode = WS2812B_Close;
+		}
 	}
 
+	if(ws2812b_mode == WS2812B_Close){
+		//ws2812b_stop();
+	}
+	
 }
 
 //================ 将颜色装载到SPI数据 ==============

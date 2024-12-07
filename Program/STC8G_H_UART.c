@@ -306,6 +306,7 @@ void TX2_write2buff(u8 dat)	//串口2发送函数
 
 void PrintString2(u8 *puts)
 { 
+	return;
     for (; *puts != 0;	puts++)  TX2_write2buff(*puts); 	//遇到停止符0结束
 }
 
