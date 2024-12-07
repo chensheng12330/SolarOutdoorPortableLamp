@@ -685,9 +685,8 @@ void menuCheck()
 			Key3_Short_Function = 0;
 			PrintString2("Key3 short pressed.\r\n");
 
-			// 设置
-			//setPWMWithLEDBrightness(pwm_DutyLevel);
-			run_ws2812b();
+			//RGB 下一功能
+			ws2812b_key_next();
 		}
 
 		// Key3长按, 开启-关闭
@@ -697,13 +696,12 @@ void menuCheck()
 			PrintString2("Key3 long pressed.\r\n");
 			if (rgbMode == RGB_MODE_Close)
 			{
-				rgbMode = RGB_MODE_1;
-				run_ws2812b();
+				ws2812b_switch(WS2812B_ON_1);
 			}
 			else
 			{
 				rgbMode = RGB_MODE_Close;
-				stop_ws2812b();
+				ws2812b_stop
 				
 			}
 			PrintfString2("rgb Mode: %hd", rgbMode);
@@ -756,6 +754,9 @@ void main(void)
 
 		// 电量显示
 		scanerBatterVoltage();
+
+		// RGB灯处理
+		ws2812b_runLoop();
 	}
 }
 
@@ -813,11 +814,11 @@ void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 		break;
 	case PWM_Duty_Level_50:
 		/* code */
-		curPWMDuty = PWMPeriod * 0.35;
+		curPWMDuty = PWMPeriod * 0.1;
 		break;
 	case PWM_Duty_Level_25:
 		/* code */
-		curPWMDuty = PWMPeriod * 0.25;
+		curPWMDuty = PWMPeriod * 0.05;
 		break;
 	case PWM_Duty_Level_0:
 		/* code */

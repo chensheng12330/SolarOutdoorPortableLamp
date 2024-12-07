@@ -62,14 +62,13 @@ u8	xdata  led_SPI[SPI_NUM];	//LED灯对应SPI字节数
 bit	B_UR1T_DMA_busy;	//UR1T-DMA忙标志
 bit B_Run_ws2812b;
 
+WS2812B_Mode ws2812b_mode;
 
 /*************  外部函数和变量声明 *****************/
-void	LoadSPI(void);
-void	UART1_SPI_Config(u8 SPI_io, u8 SPI_speed);	//(SPI_io, SPI_speed), 参数:  SPI_io: 切换IO(SS MOSI MISO SCLK), 0: 切换到P1.4 P1.5 P1.6 P1.7,  1: 切换到P2.4 P2.5 P2.6 P2.7, 2: 切换到P4.0 P4.1 P4.2 P4.3,  3: 切换到P3.5 P3.4 P3.3 P3.2,
+void LoadSPI(void);
+void UART1_SPI_Config(u8 SPI_io, u8 SPI_speed);	//(SPI_io, SPI_speed), 参数:  SPI_io: 切换IO(SS MOSI MISO SCLK), 0: 切换到P1.4 P1.5 P1.6 P1.7,  1: 切换到P2.4 P2.5 P2.6 P2.7, 2: 切换到P4.0 P4.1 P4.2 P4.3,  3: 切换到P3.5 P3.4 P3.3 P3.2,
 													//                            SPI_speed: SPI的速度, 0: fosc/4,  1: fosc/8,  2: fosc/16,  3: fosc/2
-void	UR1T_DMA_TRIG(u8 xdata *TxBuf, u16 num);
-
-
+void UR1T_DMA_TRIG(u8 xdata *TxBuf, u16 num);
 
 /*************** 主函数 *******************************/
 
@@ -88,58 +87,108 @@ void ws2812b_init(void)
 	//SPI_speed: SPI的速度, 0: fosc/4,  1: fosc/8,  2: fosc/16,  3: fosc/2
 }
 
-void stop_ws2812b(void)
+void ws2812b_clear(){
+	u8 xdata *px;
+	u16 i;
+
+	B_Run_ws2812b = FALSE;
+
+	while (B_UR1T_DMA_busy); // 等待DMA完成
+
+	px = &led_RGB[0][0]; // 亮度(颜色)首地址
+	for (i = 0; i < (LED_NUM * 3); i++, px++)
+		*px = 0; // 清除所有的颜色
+	LoadSPI();	 // 将颜色装载到SPI数据
+	UR1T_DMA_TRIG(led_SPI, SPI_NUM);
+
+	ws2812b_mode = WS2812B_CLS;
+	return
+}
+
+void ws2812b_stop(void)
+{
+	ws2812b_clear();
+	while (B_UR1T_DMA_busy); // 等待DMA完成
+	ws2812b_mode = WS2812B_OFF;
+}
+
+void ws2812b_run(void) // 运行WS2812B驱动程序
+{
+	px = &led_RGB[0][0]; // 亮度(颜色)首地址
+	for (i = 0; i < (LED_NUM * 3); i++, px++)
+		*px = 0; // 清除所有的颜色
+
+	ws2812b_mode = WS2812B_ON_1;
+}
+
+void void ws2812b_runLoop(void)
+{
+	if (ws2812b_mode == WS2812B_OFF || B_UR1T_DMA_busy)
+	{
+		//不做任何处理
+		return;
+	}
+
+	if(ws2812b_mode == WS2812B_ON_1){
+		WS2812B_ON_1();
+	}
+	else if(ws2812b_mode == WS2812B_ON_2){
+	}
+	else if (ws2812b_mode == WS2812B_CLS)
+	{
+		ws2812b_clear();
+	}
+
+	return;
+}
+
+static u8 k = 0;
+void WS2812B_ON_1(void)
 {
 	u8	xdata *px;
 	u16	i;
 	
-	B_Run_ws2812b = FALSE;
+	B_Run_ws2812b = TRUE;
 	
-	while(B_UR1T_DMA_busy)	;	//等待DMA完成
+	while(B_UR1T_DMA_busy);	//等待DMA完成
 
-	px = &led_RGB[0][0];	//亮度(颜色)首地址
-	for(i=0; i<(LED_NUM*3); i++, px++)	*px = 0;	//清除所有的颜色
-	LoadSPI();										// 将颜色装载到SPI数据
-	UR1T_DMA_TRIG(led_SPI, SPI_NUM);
+	px = &led_RGB[0][0]; // 亮度(颜色)首地址
+	for (i = 0; i < (LED_NUM * 3); i++, px++)
+		*px = 0; // 清除所有的颜色
 
-	while (B_UR1T_DMA_busy); // 等待DMA完成
-	PrintfString2("stop_ws2812b");
+	i = k;
+	led_RGB[i][1] = COLOR; // 红色
+	if (++i >= LED_NUM)
+		i = 0;			   // 下一个灯
+	led_RGB[i][0] = COLOR; // 绿色
+	if (++i >= LED_NUM)
+		i = 0;			   // 下一个灯
+	led_RGB[i][2] = COLOR; // 蓝色
+
+	LoadSPI();						 // 将颜色装载到SPI数据
+	UR1T_DMA_TRIG(led_SPI, SPI_NUM); //(u8 xdata *TxBuf, u16 num);
+
+	if (++k >= LED_NUM)
+		k = 0; // 顺时针
+	//	if(--k >= LED_NUM)	k = LED_NUM-1;	//逆时针
+	delay_s(2);
 }
 
-void run_ws2812b(void)
+void ws2812b_switch(WS2812B_Mode mode)
 {
-	u16	i,k,times ;
-	u8	xdata *px;
-	
-	k = 0;		//
-	times = 10;
-	B_Run_ws2812b = TRUE;
+	ws2812b_mode = mode;
+}
 
-	PrintfString2("run_ws2812b");
-	while (times-- && B_Run_ws2812b)
-	{
-		while(B_UR1T_DMA_busy)	;	//等待DMA完成
-
-		px = &led_RGB[0][0];	//亮度(颜色)首地址
-		for(i=0; i<(LED_NUM*3); i++, px++)	*px = 0;	//清除所有的颜色
-
-		i = k;
-		led_RGB[i][1] = COLOR;		//红色
-		if(++i >= LED_NUM)	i = 0;	//下一个灯
-		led_RGB[i][0] = COLOR;		//绿色
-		if(++i >= LED_NUM)	i = 0;	//下一个灯
-		led_RGB[i][2] = COLOR;		//蓝色
-
-		LoadSPI();			//将颜色装载到SPI数据
-		UR1T_DMA_TRIG(led_SPI, SPI_NUM);	//(u8 xdata *TxBuf, u16 num);
-
-		if(++k >= LED_NUM)	k = 0;			//顺时针
-	//	if(--k >= LED_NUM)	k = LED_NUM-1;	//逆时针
-		delay_s(2);
+void ws2812b_key_next())
+{
+	if (ws2812b_mode == WS2812B_CLS){
+		ws2812b_mode = WS2812B_OFF;
+		ws2812b_stop();
 	}
-	
-	stop_ws2812b();
-	PrintfString2("stop_ws2812b");
+	else {
+		ws2812b_mode += 1;
+	}
+
 }
 
 //================ 将颜色装载到SPI数据 ==============

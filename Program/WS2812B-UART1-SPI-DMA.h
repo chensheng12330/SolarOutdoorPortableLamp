@@ -13,6 +13,30 @@
 #ifndef	__WS2812B_DEF_H
 #define __WS2812B_DEF_H
 
+typedef enum
+{
+    WS2812B_OFF  = 0,  //关闭状态
+    WS2812B_ON_1 = 1,
+    WS2812B_ON_2 = 2,
+    WS2812B_ON_3 = 3,
+    WS2812B_ON_4 = 4,
+    WS2812B_CLS  = 5  //清屏
+} WS2812B_Mode; // RGB显示模式
+
+// 初使化
 void ws2812b_init(void);
-void run_ws2812b(void);
+
+// 主循环，写数据
+void ws2812b_runLoop(void);
+
+// 启动ws2812B 显示
+void ws2812b_run(void);
+void ws2812b_switch(WS2812B_Mode mode);
+
+//清屏，不显示任何颜色
+void ws2812b_clear();
+
+// 停止ws2812B 显示
+void ws2812b_stop();
+// 
 #endif
