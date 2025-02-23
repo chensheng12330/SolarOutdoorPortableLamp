@@ -307,11 +307,12 @@ void TX2_write2buff(u8 dat)	//串口2发送函数
 void PrintString2(u8 *puts)
 { 
 	return;
-    for (; *puts != 0;	puts++)  TX2_write2buff(*puts); 	//遇到停止符0结束
+    //for (; *puts != 0;	puts++)  TX2_write2buff(*puts); 	//遇到停止符0结束
 }
 
  void PrintfString2(const char *fmt, ...)
  {
+	/*
  	char buffer[128];			 // 定义缓冲区用于存储格式化后的字符串
  	va_list args;				 // 定义一个 va_list 类型变量，用于存储可变参数
  	va_start(args, fmt);		 // 初始化 va_list 变量
@@ -320,6 +321,7 @@ void PrintString2(u8 *puts)
 
  	//打印输出
  	PrintString2(buffer);
+	*/
  	return;
  }
 #endif
