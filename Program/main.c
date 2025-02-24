@@ -51,7 +51,6 @@
 #include "STC8G_H_Exti.h"
 #include "WS2812B-UART1-SPI-DMA.h"
 
-void main(void);
 void KeyScan(void);
 void showBatterVoltageLow();
 void displayBatterPower(float inVol);
@@ -185,9 +184,6 @@ bit show1_off0;
 u32 ADC10S_Count;
 u16 ADC_Timer_ms;
 
-bit _isSysInit = 1;//系统初始化标志
-u32 _close_led_times = 0;
-
 enum PWMDutyLevel
 {
 	PWM_Duty_Level_100 = 0, // 100亮度
@@ -216,7 +212,7 @@ enum CMDMenu cmd_Menu;
 /*************	本地函数声明	**************/
 void turnOnLEDWithCMDType(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
-void beginSelfCheck();
+void begainSelfCheck();
 void endSelfCheck();
 
 /*************  外部函数和变量声明 *****************/
@@ -715,12 +711,16 @@ void menuCheck()
 	}
 }
 
-void systemInitConfig()
+
+void main(void)
 {
+	EAXSFR(); /* 扩展寄存器访问使能 */
+	WTST = 0; // 设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
+	CKCON = 0; // 提高访问XRAM速度
+
 	// 初始化GPIO
 	GPIO_config();
-	// 启用自检
-	beginSelfCheck();
+	begainSelfCheck();
 	// 初始化外部中断
 	Exti_config();
 	// 初始化定时器
@@ -736,37 +736,15 @@ void systemInitConfig()
 	// 启用全局中断
 	EA = 1;
 
-#ifdef DEBUG_MODE
+	#ifdef DEBUG_MODE
 	PrintString2("STC8051 Solar Charging Lamp Programme!\r\n"); // UART2发送一个字符串
-#endif
+	#endif
 
 	endSelfCheck();
 	// 初始化命令菜单状态
 	cmd_Menu = CMD_None_Led;
-	return;
-}
-
-void main(void)
-{
-	_isSysInit = 0;
-	EAXSFR(); /* 扩展寄存器访问使能 */
-	WTST  = 0; // 设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
-	CKCON = 0; // 提高访问XRAM速度
-
-	// 初始化GPIO
-	GPIO_config();
-	//打开工作指示灯，出现异常时，此灯将常量,用作提示信息.
-	IO_LED_WORKLED = POW_LED_OPEN;
-	delay_s(2); //等待2s，系统稳定。
-
 	while (1)
 	{
-		if(_isSysInit==0){
-			systemInitConfig();
-			_isSysInit = 1;
-			continue;  //走下一次循环
-		}
-
 		// 按键检查
 		menuCheck();
 
@@ -781,26 +759,13 @@ void main(void)
 
 		// RGB灯处理
 		ws2812b_runLoop();
-
-		//定时检测硬关机
-		if (cmd_Menu == CMD_None_Led ) {
-			if(_close_led_times >= 65530){
-				_close_led_times = 0;
-				// 系统强制关机并休眠，节省电量
-				SysClose();
-			}
-			else {
-				_close_led_times++;
-				delay_s(1);
-			}
-		}
 	}
 }
 
 void ______Hal__FunctionSet() {}
 
 //开机自检
-void beginSelfCheck()
+void begainSelfCheck()
 {
 	// 检测IO口状态
 	delay_ms(250);
@@ -1150,7 +1115,7 @@ void SysOpen()
  */
 void SysClose()
 {
-	beginSelfCheck();
+	begainSelfCheck();
 	cmd_Menu = CMD_Sys_Close;
 	PrintString2("Sys Close.");
 	PWMA_ENO = 0x0; // Close All;
