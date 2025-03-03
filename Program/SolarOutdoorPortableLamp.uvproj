@@ -13,14 +13,14 @@
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>STC8051U-32Bit Series</Device>
-          <Vendor>STC</Vendor>
+          <Device>AI8051U-32Bit Series</Device>
+          <Vendor>AI</Vendor>
           <Cpu>IRAM(0-0x7FF) XRAM(0x10000-0x17FFF) IROM(0xFF0000-0xFFFFFF) CLOCK(35000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"LIB\STARTUP251.ASM" ("80251 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>63668</DeviceId>
-          <RegisterFile>STC8051U.H</RegisterFile>
+          <DeviceId>30900</DeviceId>
+          <RegisterFile>AI8051U.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>

@@ -102,6 +102,9 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 #define VOLTAGE_HIGH 125 // 高电压阈值，对应12.5V
 #define VOLTAGE_LOW 85	 // 低电压阈值，对应8.5V
 
+#define VREFH_ADDR CHIPID7
+#define VREFL_ADDR CHIPID8
+
 /*************	本地变量声明	**************/
 
 sbit IO_LED_White    = P1 ^ 3;	   // OUT-白光LED驱动控制开关，默认关
@@ -183,6 +186,13 @@ bit show1_off0;
 
 u32 ADC10S_Count;
 u16 ADC_Timer_ms;
+
+bit _isSysInit = 1; // 系统初始化标志
+u32 _close_led_times = 0;
+int BGV; // 内部1.19V参考信号源值存放在idata中
+		 // idata的EFH地址存放高字节
+		 // idata的F0H地址存放低字节
+		 // 电压单位为毫伏(mV)
 
 enum PWMDutyLevel
 {
@@ -340,6 +350,7 @@ void INT2_ISR_Handler(void) interrupt INT2_VECTOR
 /******************* AD配置函数 *******************/
 void ADC_config(void)
 {
+	BGV = (VREFH_ADDR << 8) + VREFL_ADDR;
 	ADCTIM = 0x3f;	  // 设置 ADC 内部时序，ADC采样时间建议设最大值
 	ADCCFG = 0x2f;	  // 设置 ADC 时钟为系统时钟/2/16/16
 	ADC_CONTR = 0x80; // 使能 ADC 模块
@@ -366,7 +377,8 @@ void UART_config(void)
 	COMx_InitStructure.UART_RxEnable = ENABLE;		// 接收允许,   ENABLE或DISABLE
 	UART_Configuration(UART2, &COMx_InitStructure); // 初始化串口2 USART1,USART2,USART3,USART4
 	NVIC_UART2_Init(ENABLE, Priority_1);			// 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
-	UART2_SW(UART2_SW_P46_P47);						// UART2_SW_P10_P11,UART2_SW_P46_P47
+	//UART2_SW(UART2_SW_P46_P47);						// UART2_SW_P10_P11,UART2_SW_P46_P47
+	S2_S = 1; // UART2 switch to: 0: P1.2 P1.3,  1: P4.2 P4.3
 }
 
 /************************ 定时器配置 ****************************/
@@ -398,7 +410,7 @@ void Timer_config(void)
 	TIM_InitStructure.TIM_ClkOut = DISABLE;						// 是否输出高速脉冲, ENABLE或DISABLE
 	TIM_InitStructure.TIM_Value = 65536UL - (MAIN_Fosc / 1000); // 初值
 	TIM_InitStructure.TIM_PS = 0;								// 8位预分频器(n+1), 0~255, (注意:并非所有系列都有此寄存器,详情请查看数据手册)
-	TIM_InitStructure.TIM_Run = DISABLE;						// 是否初始化后启动定时器, ENABLE或DISABLE
+	TIM_InitStructure.TIM_Run = ENABLE;							// 是否初始化后启动定时器, ENABLE或DISABLE
 	Timer_Inilize(Timer2, &TIM_InitStructure);					// 初始化Timer2	  Timer0,Timer1,Timer2,Timer3,Timer4
 	NVIC_Timer2_Init(DISABLE, NULL);							// 中断使能, ENABLE/DISABLE; 无优先级
 
@@ -565,11 +577,18 @@ void scanerWorkLEDChange(void)
 	}
 }
 
+#define BRT (65536 - (MAIN_Fosc / 115200+2) / 4)
+
+
+
+
+
 //  电池电压扫描，10s一次.
 void scanerBatterVoltage()
 {
-	u32 adcResVal = 0;
+	u16 adcResVal = 0;
 	float fCalVol = 0;
+	u16 Bandgap = 0;
 
 	if (LED_WORKLED_Flag == 1 && ADC_Timer_ms == 1)
 	{
@@ -581,13 +600,29 @@ void scanerBatterVoltage()
 			ADC10S_Count = 0;
 
 			// 获取电压值  P3.5/ADC13
-			adcResVal = Get_ADC12bitResult(ADC_CH8); // 参数0~15,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
+			// adcResVal = Get_ADC12bitResult(ADC_CH15); // 参数0~15,查询方式做一次ADC, 返回值就是结果, == 4096 为错误
+
+			
+
+			//Bandgap = Get_ADC12bitResult(ADC_CH15);	// 先读一次并丢弃结果, 让内部的采样电容的电压等于输入值.
+			Bandgap = Get_ADC12bitResult(ADC_CH15); // 读内部基准ADC, 读15通道
+			PrintfString2("ADC_CH15_Res: %d \r\n", Bandgap);
+
+			adcResVal = Get_ADC12bitResult(ADC_CH8); // 先读一次并丢弃结果, 让内部的采样电容的电压等于输入值.
+			//j = Get_ADC12bitResult(ADC_CH8);		// 读外部电压ADC
 
 			if (adcResVal == 4096 || adcResVal < 1) // 数据异常时
 			{
 				PrintfString2("ADC error. val: %ld \r\n", adcResVal);
 				return;
 			}
+
+			
+			PrintfString2("ADC_CH13_Res: %d \r\n", adcResVal);
+			
+
+			adcResVal = (u16)((u32)adcResVal * 119 / Bandgap); // 计算外部电压, Bandgap为1.19V, 测电压分辨率0.01V
+			fCalVol = (float)adcResVal / 100 * 2.0;  //外部电阻分压1/2,结果需要x2
 			// 计算电压值
 			// inVol = Res*RefVol / 1024
 			// 外部电池电压4.2v  (获取内部参考电压)
@@ -598,10 +633,11 @@ void scanerBatterVoltage()
 			 */
 
 			// 12位ADC转换结果， 外部电阻分压1/2,结果需要x2
-			fCalVol = (adcResVal * 3.30f * 2) / 4096.0f; // 单位mv（1196）
+			//fCalVol = (adcResVal * 3.30f * 2) / 4096.0f; // 单位mv（1196）
+			//fCalVol = (u16)(4096L * BGV / adcResVal);
 
 #ifdef DEBUG_MODE
-			PrintfString2("batter voltage: %f v. adcResVal: %ld\r\n", fCalVol, adcResVal);
+			PrintfString2("Batter voltage=%0.2fV\r\n", fCalVol);
 #endif
 			// 电压值转换LED灯显示
 			displayBatterPower(fCalVol);
@@ -711,15 +747,7 @@ void menuCheck()
 	}
 }
 
-
-void main(void)
-{
-	EAXSFR(); /* 扩展寄存器访问使能 */
-	WTST = 0; // 设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
-	CKCON = 0; // 提高访问XRAM速度
-
-	// 初始化GPIO
-	GPIO_config();
+void systemInitConfig(){
 	begainSelfCheck();
 	// 初始化外部中断
 	Exti_config();
@@ -736,15 +764,53 @@ void main(void)
 	// 启用全局中断
 	EA = 1;
 
-	#ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
 	PrintString2("STC8051 Solar Charging Lamp Programme!\r\n"); // UART2发送一个字符串
-	#endif
-
+#endif
 	endSelfCheck();
-	// 初始化命令菜单状态
-	cmd_Menu = CMD_None_Led;
+	return;
+}
+
+void sleepCheck(){
+	// 定时检测硬关机
+	if (cmd_Menu == CMD_None_Led)
+	{
+		if (_close_led_times >= 1000) //10秒时长
+		{
+			_close_led_times = 0;
+			// 系统强制关机并休眠，节省电量
+			SysClose();
+		}
+		else
+		{
+			_close_led_times++;
+			delay_ms(10);
+		}
+	}
+}
+
+void main(void)
+{
+	_isSysInit = 0;
+	EAXSFR(); /* 扩展寄存器访问使能 */
+	WTST = 0; // 设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
+	CKCON = 0; // 提高访问XRAM速度
+
+	// 初始化GPIO
+	GPIO_config();
+	// 打开工作指示灯，出现异常时，此灯将常量,用作提示信息.
+	IO_LED_WORKLED = POW_LED_OPEN;
+	delay_s(2); // 等待2s，系统稳定。
+
 	while (1)
 	{
+		if (_isSysInit == 0)
+		{
+			systemInitConfig();
+			_isSysInit = 1;
+			continue; // 走下一次循环
+		}
+
 		// 按键检查
 		menuCheck();
 
@@ -759,6 +825,9 @@ void main(void)
 
 		// RGB灯处理
 		ws2812b_runLoop();
+
+		//定时检测硬关机
+		sleepCheck();
 	}
 }
 
@@ -776,7 +845,7 @@ void begainSelfCheck()
 
 void endSelfCheck()
 {
-	delay_s(1);
+	delay_s(1); 
 	IO_LED_WORKLED = IO_LED_ERR = POW_LED_CLOSE;
 	delay_s(1);
 	BAT_POW_LED1 = POW_LED_CLOSE;
