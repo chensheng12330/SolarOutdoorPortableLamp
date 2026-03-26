@@ -1,0 +1,560 @@
+{
+    "root": {
+        "data": {
+            "id": "d12nt62nh400",
+            "created": 1715008599612,
+            "text": "FireLamp"
+        },
+        "children": [
+            {
+                "data": {
+                    "id": "d12o1e5we8o0",
+                    "created": 1715009244136,
+                    "text": "硬件搭建"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d12o1jc4vts0",
+                            "created": 1715009255397,
+                            "text": "LED工作灯"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d14d9wah9wo0",
+                            "created": 1715181998213,
+                            "text": "电源指示灯"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d12oatezcdc0",
+                            "created": 1715009982614,
+                            "text": "电瓶电压输入"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d12odje88io0",
+                                    "created": 1715010195894,
+                                    "text": "2电阻串联分压？"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d12oiu04e400",
+                                            "created": 1715010610806,
+                                            "text": "100k"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d12obsvbnao0",
+                            "created": 1715010059790,
+                            "text": "单片机供电"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d12oby1m4t40",
+                                    "created": 1715010071054,
+                                    "text": "5v稳压"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d12oc1i42w00",
+                                    "created": 1715010078582,
+                                    "text": "adj-参考电压"
+                                },
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d14di7jjj7k0",
+                    "created": 1715182649619,
+                    "text": "软件"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d18l1jx9qxc0",
+                            "created": 1715610153085,
+                            "text": "adc 测量电压"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l1rk30680",
+                            "created": 1715610169702,
+                            "text": "继电器控制"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l2ms9mq80",
+                            "created": 1715610237677,
+                            "text": "调试日志输出控制开关"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l5ax46600",
+                            "created": 1715610446941,
+                            "text": "LED显示灯"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d18l6za8uyg0",
+                            "created": 1715610578342,
+                            "text": "待办"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d18l5koso0w0",
+                                    "created": 1715610468206,
+                                    "text": "5线4LED显示被测电压"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d18l76ce7rk0",
+                                    "created": 1715610593710,
+                                    "text": "红外控制"
+                                },
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d12ogr5upbs0",
+                    "created": 1715010447894,
+                    "text": "上电测试"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d12ogzqsc480",
+                            "created": 1715010466574,
+                            "text": "逻辑分析仪"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d12ohda4hnc0",
+                                    "created": 1715010496041,
+                                    "text": "两IO口"
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d12ohg044n40",
+                            "created": 1715010501966,
+                            "text": "待测电压"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d12ohzayn0w0",
+                    "created": 1715010543981,
+                    "text": "问题 "
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d12oi1vymuw0",
+                            "created": 1715010549605,
+                            "text": "单片机工作电压5v"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "d12oi5wbwqo0",
+                            "created": 1715010558334,
+                            "text": "待测电压 6~14v"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "dhciuov2u340",
+                    "created": 1774508747935,
+                    "text": "逻辑"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "dhciv2pfw5c0",
+                            "created": 1774508778069,
+                            "text": "上电启动"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "dhcivgerd9s0",
+                                    "created": 1774508807898,
+                                    "text": "初使化硬件"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "dhcivpqdxr40",
+                                            "created": 1774508828193,
+                                            "text": "输出"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "dhcivwasi940",
+                                                    "created": 1774508842487,
+                                                    "text": "状态指示灯"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "dhckwdr0a2w0",
+                                                            "created": 1774514522693,
+                                                            "text": "P1.7"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "dhckxs7t07k0",
+                                                                    "created": 1774514632548,
+                                                                    "text": "(GPIO推挽输出)"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "dhciw1urau80",
+                                                    "created": 1774508854578,
+                                                    "text": "NMos驱动"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "dhckxbj6mhc0",
+                                                            "created": 1774514596230,
+                                                            "text": "P1.3"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "dhckxmx2c200",
+                                                                    "created": 1774514621014,
+                                                                    "text": "(PWM2N, NMos驱动)"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "dhcivtt7e2w0",
+                                            "created": 1774508837070,
+                                            "text": "输入"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "dhciwvy8x0o0",
+                                                    "created": 1774508920093,
+                                                    "text": "功能按键"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "dhciyv9tbm80",
+                                                            "created": 1774509075344,
+                                                            "text": "低电平有效"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "dhckyvtcfe80",
+                                                                    "created": 1774514718744,
+                                                                    "text": "P3.6"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "dhcix3i0jl40",
+                                                    "created": 1774508936525,
+                                                    "text": "开启充电信号"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "dhcizkwoaa80",
+                                                            "created": 1774509131145,
+                                                            "text": "高电平有效"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "dhckz7n6o400",
+                                                                    "created": 1774514744493,
+                                                                    "text": "P3.5"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "dhckzpvdg880",
+                                                    "created": 1774514784171,
+                                                    "text": "电池电压"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "dhcl00hn7kw0",
+                                                            "created": 1774514807285,
+                                                            "text": "P1.1"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "dhcl06brlkw0",
+                                                                    "created": 1774514819990,
+                                                                    "text": "电池电压ADC (ADC1通道)"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "dhcive054kg0",
+                            "created": 1774508802661,
+                            "text": "循环任务Task"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "dhcjjjo7za80",
+                                    "created": 1774510695741,
+                                    "text": "按键扫描识别"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "dhcjkrufaio0",
+                                            "created": 1774510791894,
+                                            "text": "短按"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "dhcjllhnxps0",
+                                                    "created": 1774510856426,
+                                                    "text": "功能循环"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "dhcjlpiqqu80",
+                                                            "created": 1774510865199,
+                                                            "text": "触发一次亮灯"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "dhcjm5gyfio0",
+                                                            "created": 1774510899919,
+                                                            "text": "应用重启"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "dhcjjv5baqg0",
+                                            "created": 1774510720719,
+                                            "text": "长按"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "dhcjp9lgm4w0",
+                                    "created": 1774511143991,
+                                    "text": "状态灯显示"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "dhcklernsrk0",
+                                            "created": 1774513662903,
+                                            "text": "正常态"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "dhcklmh2xg00",
+                                                    "created": 1774513679678,
+                                                    "text": "每2秒亮一次"
+                                                },
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "dhcklue7dkw0",
+                                            "created": 1774513696918,
+                                            "text": "异常态"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "dhcklw834go0",
+                                                    "created": 1774513700902,
+                                                    "text": "常亮"
+                                                },
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "dhckkyf0jrc0",
+                                    "created": 1774513627310,
+                                    "text": "充电监控"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "dhcko9guj6o0",
+                                            "created": 1774513886458,
+                                            "text": "充电状态变为未充电时触发"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "dhckp2tu4gg0",
+                                                    "created": 1774513950370,
+                                                    "text": "NMos LED亮"
+                                                },
+                                                "children": []
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "dhckps5k7g00",
+                                                    "created": 1774514005498,
+                                                    "text": "持续亮灯10分钟关闭"
+                                                },
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "dhckqb6vcs00",
+                                    "created": 1774514046937,
+                                    "text": "NMos LED灯 开关控制"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "dhckus4krkw0",
+                                            "created": 1774514397260,
+                                            "text": "低电平开"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "dhckuuxkdz40",
+                                            "created": 1774514403366,
+                                            "text": "高电平关"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "dhckuxecb2g0",
+                                            "created": 1774514408734,
+                                            "text": "PWM波"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "template": "right",
+    "theme": "fresh-blue",
+    "version": "1.4.43"
+}

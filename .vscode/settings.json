@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.m": "objective-c",
+        "config.h": "c",
+        "stc8g_h_adc.h": "c",
+        "stc8h.h": "c",
+        "stdlib.h": "c",
+        "intrins.h": "c",
+        "INTRINS.H": "cpp"
+    }
+}

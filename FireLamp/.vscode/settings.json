@@ -1,0 +1,11 @@
+{
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "*.m": "objective-c",
+        "config.h": "c",
+        "intrins.h": "c",
+        "stdio.h": "c",
+        "STDIO.H": "cpp",
+        "INTRINS.H": "cpp"
+    }
+}
