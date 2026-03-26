@@ -10,36 +10,36 @@
 /* 如果要在程序中使用此代码,请在程序中注明使用了STC的资料及程序            */
 /*---------------------------------------------------------------------*/
 
-#include	"STC8G_H_Delay.h"
+#ifndef	__WS2812B_DEF_H
+#define __WS2812B_DEF_H
 
-//========================================================================
-// 函数: void delay_ms(unsigned char ms)
-// 描述: 延时函数。
-// 参数: ms,要延时的ms数, 这里只支持1~255ms. 自动适应主时钟.
-// 返回: none.
-// 版本: VER1.0
-// 日期: 2021-3-9
-// 备注: 
-//========================================================================
-void delay_ms(unsigned char ms)
+typedef enum
 {
-	unsigned int i;
-	do{
-		i = MAIN_Fosc / 10000;
-		while(--i);
-	}while(--ms);
-}
+    WS2812B_Close  = 0,  //关闭状态
+    WS2812B_ON_1 = 1,
+    WS2812B_ON_2 = 2,
+    WS2812B_ON_3 = 3,
+    WS2812B_ON_4 = 4,
+    WS2812B_CLS  = 5  //清屏
+} WS2812B_Mode; // RGB显示模式
 
-/**
- * 延时函数，以秒为单位
- * @param s 延时的时间，单位为秒
- */
-void delay_s(unsigned char s) {
-    // 计算延时次数，每次延时250毫秒，因此1秒需要延时4次
-    unsigned int i = s * 4;
-    // 执行延时
-    do {
-        // 延时250毫秒
-        delay_ms(250);
-    } while (--i);
-}
+extern WS2812B_Mode ws2812b_mode;
+
+// 初使化
+void ws2812b_init(void);
+
+// 主循环，写数据
+void ws2812b_runLoop(void);
+
+// 启动ws2812B 显示
+void ws2812b_run(void);
+void ws2812b_switch(WS2812B_Mode mode);
+void ws2812b_key_next(); //按键功能切换ws2812B模式
+
+//清屏，不显示任何颜色
+void ws2812b_clear();
+
+// 停止ws2812B 显示
+void ws2812b_stop();
+// 
+#endif

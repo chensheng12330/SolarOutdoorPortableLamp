@@ -26,11 +26,11 @@
 //                              定义声明
 //========================================================================
 
-sbit INT0 = P3^2;
-sbit INT1 = P3^3;
-sbit INT2 = P3^6;
-sbit INT3 = P3^7;
-sbit INT4 = P3^0;
+//sbit INT0 = P3^2;
+//sbit INT1 = P3^3;
+//sbit INT2 = P3^6;
+//sbit INT3 = P3^7;
+//sbit INT4 = P3^0;
 
 #define	EXT_INT0			0	//外中断0
 #define	EXT_INT1			1	//外中断1

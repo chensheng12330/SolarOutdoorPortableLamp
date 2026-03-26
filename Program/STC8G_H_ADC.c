@@ -11,7 +11,6 @@
 /*---------------------------------------------------------------------*/
 
 #include	"STC8G_H_ADC.h"
-
 //========================================================================
 // 函数: void	ADC_Inilize(ADC_InitTypeDef *ADCx)
 // 描述: ADC初始化程序.
@@ -61,7 +60,9 @@ u16	Get_ADCResult(u8 channel)	//channel = 0~15
 	ADC_RES = 0;
 	ADC_RESL = 0;
 
-	ADC_CONTR = (ADC_CONTR & 0xf0) | ADC_START | channel; 
+	ADC_CONTR = (ADC_CONTR & 0xf0) | channel; // 设置ADC转换通道
+	ADC_START = 1;							  // 启动ADC转换
+
 	NOP(10);			//对ADC_CONTR操作后等待会儿再访问
 
 	for(i=0; i<250; i++)		//超时返回，正常i等于10以内就可以转换完成
@@ -87,4 +88,25 @@ u16	Get_ADCResult(u8 channel)	//channel = 0~15
 		}
 	}
 	return	4096;	//错误,返回4096,调用的程序判断
+}
+//========================================================================
+// 函数: u16 Get_ADC12bitResult(u8 channel)
+// 描述: 查询法读一次ADC结果.
+// 参数: channel: 选择要转换的ADC.
+// 返回: 12位ADC结果.
+// 版本: V1.0, 2012-10-22
+//========================================================================
+u16 Get_ADC12bitResult(u8 channel) // channel = 0~15
+{
+	ADC_RES = 0;
+	ADC_RESL = 0;
+
+	ADC_CONTR = (ADC_CONTR & 0xf0) | channel; // 设置ADC转换通道
+	ADC_START = 1;							  // 启动ADC转换
+	NOP(10);
+
+	while (ADC_FLAG == 0);		  // wait for ADC finish
+	
+	ADC_FLAG = 0; // 清除ADC结束标志
+	return (((u16)ADC_RES << 8) | ADC_RESL);
 }
