@@ -13,18 +13,25 @@
 /** 接线图
 串口调试输出: UART2_SW_P10_P11
  * 芯片: STC8H17K
-   1.2:		    1.1:BAT-ADC
-   1.3:IO-White	1.0:
-   1.4:xxxxx	3.7:xxxxxx
-   1.5:xxxxx	3.6:KEY-MAIN
-   1.6:xxxxx	3.5: LED-4
-   1.7:WORKLED	3.4: LED-3
-   5.4			3.3: LED-2
-   vcc			3.2: LED-1
+   1.2:xxxxx    1.1:  LED-2
+   1.3:IO-White	1.0:  LED-1
+   1.4:LED-3    3.7:xxxxxx
+   1.5:LED-4	3.6:KEY-MAIN
+   1.6:UART2_Rx 3.5:ADC_BAT
+   1.7:UART2_Tx 3.4:LED_ERR
+   5.4			3.3: WORKLED
+   vcc			3.2: IN_Charging
    adc-ref	    3.1: TxD1
    gnd			3.0: RxD1
 
 实现功能
+1. 电量显示LED [低电平亮]
+2. 工作指示灯 [0:工作, 1:不工作] 低电平亮
+3. 运行异常LED灯 [1:正常, 0:异常] 低电平亮
+4. 充电输入口 [1:充电, 0:不充电]
+5. 日志UART2接收
+6. 日志UART2发送
+7. 主菜单按键
 */
 
 #define DEBUG_MODE 1 // 开发模式
@@ -79,25 +86,30 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 ******************************************/
 
 /*************	本地常量声明	**************/
+#define POW_LED_OPEN 0  // 电量LED灯开启
+#define POW_LED_CLOSE 1 // 电量LED灯关闭
 
 /*************	本地变量声明	**************/
-sbit ADC_BAT      = P3 ^ 5;    // IN-电池电压 P1 ^ 1
-sbit IO_LED_White = P1 ^ 3;	   // OUT-白光LED驱动控制开关，默认关
 
-#define POW_LED_OPEN 0		  // 电量LED灯开启
-#define POW_LED_CLOSE 1		  // 电量LED灯关闭
-sbit IO_LED_WORKLED = P1 ^ 7;     // 工作指示灯
-sbit IO_IN_Charging = P1 ^ 6;    // 充电输入口
-    
-// 按键
-sbit KEY1 = P3 ^ 6; // 主菜单按键
+//P1排口 推 0-5 推挽输出, 6-7: 双向口
+sbit IO_LED_White = P1 ^ 3;    // OUT-白光LED驱动控制开关，默认关
+// 电量显示LED [低电平亮]
+sbit BAT_POW_LED4 = P1 ^ 5; 
+sbit BAT_POW_LED3 = P1 ^ 4;
+sbit BAT_POW_LED2 = P1 ^ 1;
+sbit BAT_POW_LED1 = P1 ^ 0;
 
-// 电量显示LED
-sbit BAT_POW_LED4 = P1 ^ 0;
-sbit BAT_POW_LED3 = P3 ^ 4;
-sbit BAT_POW_LED2 = P3 ^ 3;
-sbit BAT_POW_LED1 = P3 ^ 2;
+sbit LogUART2_Rx = P1 ^ 6; // 日志UART2接收
+sbit LogUART2_Tx = P1 ^ 7; // 日志UART2发送
 
+// P3排口
+sbit IO_IN_Charging = P3 ^ 2; // [高阻输入] 充电输入口 [高阻输入][1:充电, 0:不充电]
+sbit IO_LED_WORKLED = P3 ^ 3; // [推挽输出] 工作指示灯 [0:工作, 1:不工作] 低电平亮
+sbit IO_LED_ERR     = P3 ^ 4; // [推挽输出] 运行异常LED灯 [1:正常, 0:异常] 低电平亮
+sbit ADC_BAT 		= P3 ^ 5; // [高阻输入] IN-电池电压
+sbit KEY1 			= P3 ^ 6; // [高阻输入]主菜单按键
+
+//其它功能标识
 u16 Key1_cnt;
 bit Key1_Flag;
 bit B_1ms; // 1ms标志
@@ -112,12 +124,18 @@ u16 PWMPeriod = 1000; // PWM周期设置 HZ: 1/1000  = 1ms
 u16 LED_WORKLED_Flag = 0; // 默认值为0
 u16 LED_WORKLED_50ms = 0;
 
+u16 s_ChargingStopFlag = 0;
+u16 S_OpenLedFlag = 0;
+u16 LED_White_Timer_Open_S = 0;
+u16 LED_White_Timer_1s = 0;
+u16 LED_White_Timer_ms = 0;
 
 u32 WorkLED2S_Count;
 bit show1_off0;
 
 u32 ADC10S_Count;
 u16 ADC_Timer_ms;
+
 
 enum PWMDutyLevel
 {
@@ -143,7 +161,8 @@ enum CMDMenu cmd_Menu;
 /*************	本地函数声明	**************/
 void turnOnLEDWithCMDType(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
-
+void scanerChargingDetection(void);
+void scanerWhiteLEDControl(void);
 /*************  外部函数和变量声明 *****************/
 /******************* IO配置函数 *******************/
 
@@ -173,53 +192,47 @@ void GPIO_config(void)
 	IO_LED_White = 0;
 }
 
-void Exti_config(void)
-{
-	EXTI_InitTypeDef Exti_InitStructure; // 结构定义
+void Exti_config(void) {
 
-	Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
-	Ext_Inilize(EXT_INT3, &Exti_InitStructure);	  // 初始化
-	NVIC_INT3_Init(ENABLE, Priority_3);			  // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3									
-}
+  EXTI_InitTypeDef Exti_InitStructure; // 结构定义
+  // P3.2: [高阻输入] 充电输入口 [高阻输入]  P3.2/ADC10/INTO/SCLK
+  // P3.6: [高阻输入]主菜单按键   P3.6/ADC14/INT2/RxD
 
-void INT3_ISR_Handler(void) interrupt INT3_VECTOR
-{
-
-	if (cmd_Menu == CMD_Sys_Close)
-	{
-		// 系统关闭状态
-		cmd_Menu = CMD_Sys_Open;
-		SysOpen();
-	}
-	PrintString2("INT3 event");
+  Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
+  Ext_Inilize(EXT_INT2, &Exti_InitStructure); // 初始化
+  Ext_Inilize(EXT_INT0, &Exti_InitStructure); // 初始化
+  NVIC_INT0_Init(ENABLE, Priority_2);
+  NVIC_INT2_Init(ENABLE, Priority_3);
+  // 中断使能, ENABLE/DISABLE; 优先级(低到高)
+  // Priority_0,Priority_1,Priority_2,Priority_3
 }
 
 /******************* AD配置函数 *******************/
-void ADC_config(void)
-{
-	ADC_InitTypeDef ADC_InitStructure; // 结构定义
+// void ADC_config(void)
+// {
+// 	ADC_InitTypeDef ADC_InitStructure; // 结构定义
 
-	ADC_InitStructure.ADC_SMPduty = 31;					   // ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 10）
-	ADC_InitStructure.ADC_CsSetup = 0;					   // ADC 通道选择时间控制 0(默认),1
-	ADC_InitStructure.ADC_CsHold = 1;					   // ADC 通道选择保持时间控制 0,1(默认),2,3
-	ADC_InitStructure.ADC_Speed = ADC_SPEED_2X16T;		   // 设置 ADC 工作时钟频率	ADC_SPEED_2X1T~ADC_SPEED_2X16T
-	ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED; // ADC结果调整,	ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIFIED
-	ADC_Inilize(&ADC_InitStructure);					   // 初始化
-	ADC_PowerControl(ENABLE);							   // ADC电源开关, ENABLE或DISABLE
-	NVIC_ADC_Init(DISABLE, Priority_0);					   // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
-}
+// 	ADC_InitStructure.ADC_SMPduty = 31;					   // ADC 模拟信号采样时间控制, 0~31（注意： SMPDUTY 一定不能设置小于 10）
+// 	ADC_InitStructure.ADC_CsSetup = 0;					   // ADC 通道选择时间控制 0(默认),1
+// 	ADC_InitStructure.ADC_CsHold = 1;					   // ADC 通道选择保持时间控制 0,1(默认),2,3
+// 	ADC_InitStructure.ADC_Speed = ADC_SPEED_2X16T;		   // 设置 ADC 工作时钟频率	ADC_SPEED_2X1T~ADC_SPEED_2X16T
+// 	ADC_InitStructure.ADC_AdjResult = ADC_RIGHT_JUSTIFIED; // ADC结果调整,	ADC_LEFT_JUSTIFIED,ADC_RIGHT_JUSTIFIED
+// 	ADC_Inilize(&ADC_InitStructure);					   // 初始化
+// 	ADC_PowerControl(ENABLE);							   // ADC电源开关, ENABLE或DISABLE
+// 	NVIC_ADC_Init(DISABLE, Priority_0);					   // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
+// }
 
 /***************  串口2初始化函数,调试输出 *****************/
 void UART_config(void) 
 {
 	COMx_InitDefine COMx_InitStructure;			   // 结构定义
 	COMx_InitStructure.UART_Mode = UART_8bit_BRTx; // 模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,UART_9bit_BRTx
-	//	COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;			//选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BRT_Timer2, 所以不用选择)
+	COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;			//选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BRT_Timer2, 所以不用选择),注意不能再使用Timer2作为中断
 	COMx_InitStructure.UART_BaudRate = 115200ul;	// 波特率,     110 ~ 115200
 	COMx_InitStructure.UART_RxEnable = ENABLE;		// 接收允许,   ENABLE或DISABLE
-	UART_Configuration(UART2, &COMx_InitStructure); // 初始化串口2 USART1,USART2,USART3,USART4
-	NVIC_UART2_Init(ENABLE, Priority_1);			// 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
-	UART2_SW(UART2_SW_P10_P11);						// UART2_SW_P10_P11,UART2_SW_P46_P47
+	UART_Configuration(UART1, &COMx_InitStructure); // 初始化串口2 USART1,USART2,USART3,USART4
+	NVIC_UART1_Init(ENABLE, Priority_3);			// 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
+	UART1_SW(UART1_SW_P16_P17);
 }
 
 /************************ 定时器配置 ****************************/
@@ -227,7 +240,7 @@ void Timer_config(void)
 {
 	TIM_InitTypeDef TIM_InitStructure; // 结构定义
 
-	//[按键检测信号源1ms] 定时器1做16位自动重装, 中断频率为1000HZ，中断函数从P6.6取反输出5KHZ方波信号.
+	//[Timer1 按键检测信号源1ms] 定时器1做16位自动重装, 中断频率为1000HZ
 	TIM_InitStructure.TIM_Mode = TIM_16BitAutoReload;			 // 指定工作模式,   TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_T1Stop
 	TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;				 // 指定时钟源, TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
 	TIM_InitStructure.TIM_ClkOut = DISABLE;						 // 是否输出高速脉冲, ENABLE或DISABLE
@@ -235,48 +248,15 @@ void Timer_config(void)
 	TIM_InitStructure.TIM_Run = ENABLE;							 // 是否初始化后启动定时器, ENABLE或DISABLE
 	Timer_Inilize(Timer1, &TIM_InitStructure);					 // 初始化Timer1	  Timer0,Timer1,Timer2,Timer3,Timer4
 	NVIC_Timer1_Init(ENABLE, Priority_0);						 // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
-
-	//[红蓝警灯信号] [50ms]
-	// // 定时器2做16位自动重装, 中断频率为100HZ，中断函数从P6.5取反输出500HZ方波信号.
-	TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;				// 指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
-	TIM_InitStructure.TIM_ClkOut = DISABLE;						// 是否输出高速脉冲, ENABLE或DISABLE
-	TIM_InitStructure.TIM_Value = 65536UL - (MAIN_Fosc / 1000); // 初值
-	TIM_InitStructure.TIM_PS = 0;								// 8位预分频器(n+1), 0~255, (注意:并非所有系列都有此寄存器,详情请查看数据手册)
-	TIM_InitStructure.TIM_Run = DISABLE;						// 是否初始化后启动定时器, ENABLE或DISABLE
-	Timer_Inilize(Timer2, &TIM_InitStructure);					// 初始化Timer2	  Timer0,Timer1,Timer2,Timer3,Timer4
-	NVIC_Timer2_Init(DISABLE, NULL);							// 中断使能, ENABLE/DISABLE; 无优先级
-}
-
-//========================================================================
-// 函数: Timer0_ISR_Handler
-// 描述: Timer0中断函数.
-// 参数: none.
-// 返回: none.
-// 版本: V1.0, 2020-09-23
-//========================================================================
-void Timer1_ISR_Handler(void) interrupt TMR1_VECTOR // 进中断时已经清除标志
-{
-	// TODO: 在此处添加用户代码
-	B_1ms = 1;
-	LED_WORKLED_50ms = 1;
-	ADC_Timer_ms = 1;
 }
 
 void PWM_config(void)
 {
-
 	PWMx_InitDefine PWMx_InitStructure;
 	PWMA_Duty.PWM_COM_Duty = PWMPeriod * 2 / 3;
 
 	// 调试代码
 	PWMA_Duty.PWM2_Duty = PWMA_Duty.PWM_COM_Duty;
-	PWMA_Duty.PWM3_Duty = PWMA_Duty.PWM_COM_Duty;
-	PWMA_Duty.PWM4_Duty = PWMA_Duty.PWM_COM_Duty;
-
-	// PWMx_InitStructure.PWM_Mode    =	CCMRn_PWM_MODE1;	//模式,		CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_INVALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
-	// PWMx_InitStructure.PWM_Duty    = PWMA_Duty.PWM1_Duty;	//PWM占空比时间, 0~Period
-	// PWMx_InitStructure.PWM_EnoSelect   = ENO1P | ENO1N;	//输出通道选择,	ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
-	// PWM_Configuration(PWM1, &PWMx_InitStructure);			//初始化PWM,  PWMA,PWMB
 
 	// PWM2 1.2:LowLED 1.3:IO-White
 	PWMx_InitStructure.PWM_Mode = CCMRn_PWM_MODE1;	   // 模式,		CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_INVALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
@@ -284,7 +264,6 @@ void PWM_config(void)
 	PWMx_InitStructure.PWM_EnoSelect = ENO2N;		   // 输出通道选择,	ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
 	PWM_Configuration(PWM2, &PWMx_InitStructure);	   // 初始化PWM,  PWMA,PWMB
 
-        
 	PWMx_InitStructure.PWM_Period = PWMPeriod;	   // 周期时间,   0~65535
 	PWMx_InitStructure.PWM_DeadTime = 0;		   // 死区发生器设置, 0~255
 	PWMx_InitStructure.PWM_MainOutEnable = ENABLE; // 主输出使能, ENABLE,DISABLE
@@ -292,10 +271,6 @@ void PWM_config(void)
 	PWM_Configuration(PWMA, &PWMx_InitStructure);  // 初始化PWM通用寄存器,  PWMA,PWMB
 
 	PWM2_SW(PWM2_SW_P12_P13); // PWM2_SW_P12_P13,PWM2_SW_P22_P23,PWM2_SW_P62_P63
-	//PWM3_SW(PWM3_SW_P14_P15); // PWM3_SW_P14_P15,PWM3_SW_P24_P25,PWM3_SW_P64_P65
-	//PWM4_SW(PWM4_SW_P16_P17); // PWM4_SW_P16_P17,PWM4_SW_P26_P27,PWM4_SW_P66_P67,PWM4_SW_P34_P33
-
-	//
 	NVIC_PWM_Init(PWMA, DISABLE, Priority_0);
 
 	PWMA_ENO = 0x0; // 初使化时，关闭所有PWM输出
@@ -317,13 +292,13 @@ void scanerWorkLEDChange(void)
 			{
 				IO_LED_WORKLED = POW_LED_OPEN;
 				show1_off0 = 1;
-				// PrintfString2("work led show.");
+				// PrintfString("work led show.");
 			}
 			else
 			{
 				IO_LED_WORKLED = POW_LED_CLOSE;
 				show1_off0 = 0;
-				// PrintfString2("work led off.");
+				// PrintfString("work led off.");
 			}
 
 			// 重置计算器
@@ -352,7 +327,7 @@ void scanerBatterVoltage()
 
 			if (adcResVal == 4096 || adcResVal < 1) // 数据异常时
 			{
-				PrintfString2("ADC error. val: %ld \r\n", adcResVal);
+				PrintfString("ADC error. val: %ld \r\n", adcResVal);
 				return;
 			}
 			// 计算电压值
@@ -362,7 +337,7 @@ void scanerBatterVoltage()
 			fCalVol = (adcResVal * 4.2f) / 1024.0f; // 单位mv（1196） 
 
 #ifdef DEBUG_MODE
-			PrintfString2("batter voltage: %f v. adcResVal: %ld\r\n", fCalVol, adcResVal);
+			PrintfString("batter voltage: %f v. adcResVal: %ld\r\n", fCalVol, adcResVal);
 #endif
 			// 电压值转换LED灯显示
 			displayBatterPower(fCalVol);
@@ -383,7 +358,7 @@ void menuCheck()
 		if (Key1_Function) {
 			Key1_Function = 0;
 
-			PrintString2("Key1 pressed.\r\n");
+			PrintfString("Key1 pressed.\r\n");
 			if (cmd_Menu >= CMD_None_Led || cmd_Menu <= CMD_Sys_Open)
 			{
 				if ((cmd_Menu + 1) > CMD_Sys_Open)
@@ -400,7 +375,7 @@ void menuCheck()
 				cmd_Menu = CMD_None_Led;
 			}
 
-			PrintfString2("cmd menu: %hd. \r\n", cmd_Menu);
+			PrintfString("cmd menu: %hd. \r\n", cmd_Menu);
 			turnOnLEDWithCMDType(cmd_Menu);
 		}
 	}
@@ -421,14 +396,14 @@ void main(void)
 	// 初始化定时器
 	Timer_config();
 	// 初始化ADC
-	ADC_config();
+	//ADC_config();
 	// 初始化PWM
 	PWM_config();
 	// 启用全局中断
 	EA = 1;
 
 	#ifdef DEBUG_MODE
-	PrintString2("STC8 Solar Charging Lamp Programme!\r\n"); // UART2发送一个字符串
+	PrintfString("STC8 Fire Lamp Programme!\r\n"); // UART2发送一个字符串
 	#endif
 
 	// 初始化命令菜单状态
@@ -448,28 +423,48 @@ void main(void)
 		scanerChargingDetection();
 		
 		// LED灯开关控制
-		scanerLEDControl();
+		scanerWhiteLEDControl();
 	}
 }
 
 // 充电状态检测
-void scanerChargingDetection() {
-    // 1s检测一次
-	if (IO_IN_Charging == 0)
-	{
-		// 充电状态
-		PrintString2("charging...\r\n");
-	}
-	else
-	{
-		// 不充电状态
-		PrintString2("not charging...\r\n");
-	}
+void scanerChargingDetection(void)
+{
+  if (s_ChargingStopFlag) {
+    s_ChargingStopFlag = 0;
+    PrintfString("charging stop\r\n");
+    S_OpenLedFlag = 1;
+  }
 }
 
-void scanerLEDControl()
-{
-	// LED灯开关控制
+// 白灯控制
+void scanerWhiteLEDControl() {
+
+  // 1秒一次
+  if (LED_White_Timer_1s == 1) {
+    LED_White_Timer_1s = 0;
+
+    // LED灯开关控制
+    if (S_OpenLedFlag) {
+      S_OpenLedFlag = 0;
+      LED_White_Timer_Open_S = 10; // 10s
+      IO_LED_White = POW_LED_OPEN;
+
+    //   PWMA_ENO = 0x0;
+    //   PWM2N_OUT_EN();
+    }
+
+    // 判断LED灯是否计时停止
+    if (LED_White_Timer_Open_S > 0) {
+      LED_White_Timer_Open_S--;
+      if (LED_White_Timer_Open_S == 0) {
+        IO_LED_White = POW_LED_CLOSE;
+
+        // PWMA_ENO = 0x0;
+        // PWM2N_OUT_DIS();
+      }
+    }
+  }
 }
 
 void ______Hal__FunctionSet() {}
@@ -512,37 +507,37 @@ void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 		// 保存已设置值
 		PWMA_Duty.PWM_COM_Duty = curPWMDuty;
 		PWMA_Duty2(curPWMDuty);
-		PrintfString2("Update PWM Duty: %d \r\n", curPWMDuty);
+		PrintfString("Update PWM Duty: %d \r\n", curPWMDuty);
 	}
 }
 
 void turnOnLEDWithCMDType(enum CMDMenu cmdMenu)
 {
-	
 	LED_WORKLED_Flag = 1;
 	switch (cmdMenu)
 	{
 	case CMD_None_Led: // 关闭所有灯
 		/* code */
-		PrintString2("close all led");
+		PrintfString("close all led");
 		PWMA_ENO = 0x0; // Close All;
 		LED_WORKLED_Flag = 0;
+		LED_White_Timer_Open_S = 0;
+		IO_LED_White   = POW_LED_CLOSE;
 		IO_LED_WORKLED = POW_LED_CLOSE;
 		break;
 	case CMD_White_Led: // 开启白灯
 		/* code */
-		PrintString2("open white led");
-		PWMA_ENO = 0x0;
-		PWM2N_OUT_EN();
+		PrintfString("open white led");
+		s_ChargingStopFlag = 1;
 		break;
 	case CMD_Sys_Close: // 系统关机
 		/* code */
-		PrintString2("sys close");
+		PrintfString("sys close");
 		SysClose();
 		break;
 	case CMD_Sys_Open: // 系统开机
 		/* code */
-		PrintString2("sys open");
+		PrintfString("sys open");
 		SysOpen();
 	default:
 		break;
@@ -626,7 +621,7 @@ void displayBatterPower(float inVol)
 		break;
 	}
 
-	PrintfString2("Battery level: %d", level);
+	PrintfString("Battery level: %d", level);
 }
 
 //========================================================================
@@ -667,15 +662,14 @@ void KeyScan(void)
 void SysOpen()
 {
 	cmd_Menu = CMD_Sys_Open;
-	PrintString2("Sys Open.");
+	PrintfString("Sys Open.");
 	pwm_DutyLevel = PWM_Duty_Level_75;
 
-	UART2_RxEnable(1);
+	UART1_RxEnable(1);
 	Timer1_Run(1);
-	//Timer2_Run();
+	Timer2_Run(1);
 	//ADC_PowerOn(1);
 
-	//turnOnLEDWithCMDType(cmd_Menu);
 	return;
 }
 
@@ -686,15 +680,17 @@ void SysOpen()
 void SysClose()
 {
 	cmd_Menu = CMD_Sys_Close;
-	PrintString2("Sys Close.");
+	PrintfString("Sys Close.");
 	PWMA_ENO = 0x0; // Close All;
+
+	IO_LED_White = 0;
 	IO_LED_WORKLED = POW_LED_CLOSE;
 	// IO口强制为高阻模式
 	// UART接收 关闭
-	UART2_RxEnable(0);
+	UART1_RxEnable(0);
 	// Time 关闭
 	Timer1_Stop();
-	// Timer2_Stop();
+	Timer2_Stop();
 	//  ADC 关闭
 	//ADC_PowerOn(0);
 	// PWM 关闭
@@ -703,4 +699,40 @@ void SysClose()
 
 	PCON |= 0x02; ;	//Sleep
 	return;
+}
+
+// 充电状态检测中断(下降沿触发)
+void INT0_ISR_Handler(void) interrupt INT0_VECTOR {
+  s_ChargingStopFlag = 1;
+  PrintfString("INT0 event");
+}
+
+// 主菜单按键中断
+void INT2_ISR_Handler(void) interrupt INT2_VECTOR {
+  if (cmd_Menu == CMD_Sys_Close) {
+    // 系统关闭状态
+    cmd_Menu = CMD_Sys_Open;
+    SysOpen();
+  }
+  PrintfString("INT3 event");
+}
+
+//========================================================================
+// 函数: Timer0_ISR_Handler
+// 描述: Timer0中断函数.
+// 参数: none.
+// 返回: none.
+// 版本: V1.0, 2020-09-23
+//========================================================================
+void Timer1_ISR_Handler(void) interrupt TMR1_VECTOR // 进中断时已经清除标志
+{
+  // TODO: 在此处添加用户代码
+  B_1ms = 1;
+  LED_WORKLED_50ms = 1;
+  ADC_Timer_ms = 1;
+  LED_White_Timer_ms++;
+  if (LED_White_Timer_ms > 1000) {
+    LED_White_Timer_ms = 0;
+    LED_White_Timer_1s = 1;
+  }
 }

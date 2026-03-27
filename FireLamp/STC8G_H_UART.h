@@ -46,13 +46,13 @@
 //                              定义声明
 //========================================================================
 
-//#define	UART1	1       //使用哪些串口就开对应的定义，不用的串口可屏蔽掉定义，节省资源
-#define	UART2	2
+#define	UART1	1       //使用哪些串口就开对应的定义，不用的串口可屏蔽掉定义，节省资源
+//#define	UART2	2
 //#define	UART3	3
 //#define	UART4	4
 
 #define	UART_QUEUE_MODE	0           //设置串口发送模式，0：阻塞模式，1：队列模式
-#define	PRINTF_SELECT  UART2		//选择 printf 函数所使用的串口，参数 UART1~UART4
+#define	PRINTF_SELECT  UART1		//选择 printf 函数所使用的串口，参数 UART1~UART4
 #ifdef UART1
 #define	COM_TX1_Lenth	128
 #define	COM_RX1_Lenth	128
@@ -143,12 +143,13 @@ u8	UART_Configuration(u8 UARTx, COMx_InitDefine *COMx);
 #ifdef UART1
 void TX1_write2buff(u8 dat);	//串口1发送函数
 void PrintString1(u8 *puts);
+void PrintfString(const char *fmt, ...);
 #endif
 #ifdef UART2
 
 void TX2_write2buff(u8 dat);	//串口2发送函数
 void PrintString2(u8 *puts);
-void PrintfString2(const char *fmt, ...);
+void PrintfString(const char *fmt, ...);
 
 /**
  * 使用宏定义生成 uart2Printf 函数
