@@ -140,7 +140,7 @@ flowchart TD
     E -->|否| Z
     E -->|是| F[Key1_Function = 0]
     F --> G[cmd_Menu 循环递增]
-    G --> H[turnOnLEDWithCMDType]
+    G --> H[handleCmdMenu]
     H --> Z
 ```
 
@@ -204,11 +204,11 @@ flowchart LR
     SO --> N
 ```
 
-### 7.1 `turnOnLEDWithCMDType` 分支
+### 7.1 `handleCmdMenu` 分支
 
 ```mermaid
 flowchart TD
-    A[turnOnLEDWithCMDType] --> B[LED_WORKLED_Flag = 1]
+    A[handleCmdMenu] --> B[LED_WORKLED_Flag = 1]
     B --> C{cmd_Menu}
     C -->|CMD_None_Led| D[关 PWM 关灯 清标志]
     C -->|CMD_White_Led| E[s_ChargingStopFlag = 1]
