@@ -86,8 +86,8 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 ******************************************/
 
 /*************	本地常量声明	**************/
-#define POW_LED_OPEN 0  // 电量LED灯开启
-#define POW_LED_CLOSE 1 // 电量LED灯关闭
+#define POW_LED_OPEN  1  // 电量LED灯开启
+#define POW_LED_CLOSE 0  // 电量LED灯关闭
 
 /*************	本地变量声明	**************/
 
@@ -152,10 +152,10 @@ enum PWMDutyLevel pwm_DutyLevel;
 
 enum CMDMenu
 {
-	CMD_None_Led = 0,	// 关闭所有灯
+	CMD_None_Led  = 0,	// 关闭所有灯
 	CMD_White_Led = 1,	// 开启一次白灯
-	CMD_Sys_Close = 5,	// 系统关机
-	CMD_Sys_Open = 6,	// 系统开机
+	CMD_Sys_Close = 2,	// 系统关机
+	CMD_Sys_Open  = 3,	// 系统开机
 };
 
 enum CMDMenu cmd_Menu;
@@ -184,29 +184,31 @@ void GPIO_config(void)
 //	//[P1]
 //	// p1-[1] uart2，双向口
 //	// p1-[0,2~7] 推挽输出，控制MOS管
-//	P1M0 = 0x78;
-//	P1M1 = 0x00;
-	  P1M0 = 0x3f; P1M1 = 0x00; //
-    P3M0 = 0x18; P3M1 = 0x64; 
+	P1M0 = 0x78;
+	P1M1 = 0x00;
+		// P1M0 = 0x3f; P1M1 = 0x00; //
+    	// P3M0 = 0x18; P3M1 = 0x64;
+		// P3PU = 0x60;
+
+	P3M0 = 0x18;
+	P3M1 = 0xe0;
+	P3PU = 0xe0;
 
 	IO_LED_WORKLED = POW_LED_CLOSE;
-
-	// P1 = 0;
-	// PWM 双向IO
-	IO_LED_White = 0;
+	IO_LED_White   = POW_LED_CLOSE;
 }
 
 void Exti_config(void) {
 
   EXTI_InitTypeDef Exti_InitStructure; // 结构定义
-  // P3.2: [高阻输入] 充电输入口 [高阻输入]  P3.2/ADC10/INTO/SCLK
-  // P3.6: [高阻输入]主菜单按键   P3.6/ADC14/INT2/RxD
+  // P3.2: [高阻输入] 充电输入口 [高阻输入]  P3.2/INTO/
+  // P3.6: [高阻输入] 主菜单按键            P3.6/INT2/
 
   Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
   Ext_Inilize(EXT_INT2, &Exti_InitStructure); // 初始化
-  Ext_Inilize(EXT_INT0, &Exti_InitStructure); // 初始化
-  NVIC_INT0_Init(ENABLE, Priority_2);
-  NVIC_INT2_Init(ENABLE, Priority_3);
+  Ext_Inilize(EXT_INT3, &Exti_InitStructure); // 初始化
+  NVIC_INT2_Init(ENABLE, Priority_2);
+  NVIC_INT3_Init(ENABLE, Priority_1);
   // 中断使能, ENABLE/DISABLE; 优先级(低到高)
   // Priority_0,Priority_1,Priority_2,Priority_3
 }
@@ -248,7 +250,7 @@ void Timer_config(void)
 	TIM_InitStructure.TIM_Mode = TIM_16BitAutoReload;			 // 指定工作模式,   TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_T1Stop
 	TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;				 // 指定时钟源, TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
 	TIM_InitStructure.TIM_ClkOut = DISABLE;						 // 是否输出高速脉冲, ENABLE或DISABLE
-	TIM_InitStructure.TIM_Value = 65536UL - (MAIN_Fosc / 50000); // 初值,
+	TIM_InitStructure.TIM_Value = 65536UL - (MAIN_Fosc / 1000); // 初值,
 	TIM_InitStructure.TIM_Run = ENABLE;							 // 是否初始化后启动定时器, ENABLE或DISABLE
 	Timer_Inilize(Timer1, &TIM_InitStructure);					 // 初始化Timer1	  Timer0,Timer1,Timer2,Timer3,Timer4
 	NVIC_Timer1_Init(ENABLE, Priority_0);						 // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
@@ -289,20 +291,20 @@ void scanerWorkLEDChange(void)
 	{
 		LED_WORKLED_50ms = 0;
 		WorkLED2S_Count++;
-		if (WorkLED2S_Count >= 100000)
+		if (WorkLED2S_Count >= 1500)
 		{
 			// 交换显示
 			if (show1_off0 == 0)
 			{
 				IO_LED_WORKLED = POW_LED_OPEN;
 				show1_off0 = 1;
-				 PrintfString("work led show.");
+				// PrintfString("work led show.");
 			}
 			else
 			{
 				IO_LED_WORKLED = POW_LED_CLOSE;
 				show1_off0 = 0;
-				 PrintfString("work led off.");
+				// PrintfString("work led off.");
 			}
 
 			// 重置计算器
@@ -402,7 +404,7 @@ void main(void)
 	// 初始化ADC
 	//ADC_config();
 	// 初始化PWM
-	PWM_config();
+	//PWM_config();
 	// 启用全局中断
 	EA = 1;
 
@@ -459,9 +461,10 @@ void scanerWhiteLEDControl() {
   // LED灯开关控制
   if (S_OpenLedFlag) {
     S_OpenLedFlag = 0;           // 防止重复触发
-    LED_White_Timer_Open_S = 10; // 10s
+    LED_White_Timer_Open_S = 1000; // 10s
     IO_LED_White = POW_LED_OPEN;
 
+		PrintfString("white led open.\r\n");
     //   PWMA_ENO = 0x0;
     //   PWM2N_OUT_EN();
   }
@@ -472,6 +475,7 @@ void scanerWhiteLEDControl() {
     if (LED_White_Timer_Open_S == 0) {
       IO_LED_White = POW_LED_CLOSE;
 
+	  PrintfString("white led close.\r\n");
       // PWMA_ENO = 0x0;
       // PWM2N_OUT_DIS();
     }
@@ -539,7 +543,7 @@ void handleCmdMenu(enum CMDMenu cmdMenu)
 	case CMD_White_Led: // 开启白灯
 		/* code */
 		PrintfString("open white led");
-		s_ChargingStopFlag = 1;
+		S_OpenLedFlag = 1;
 		break;
 	case CMD_Sys_Close: // 系统关机
 		/* code */
@@ -652,7 +656,7 @@ void KeyScan(void)
 		if (!Key1_Flag)
 		{
 			Key1_cnt++;
-			if (Key1_cnt >= 3000) // 50ms防抖
+			if (Key1_cnt >= 500) // 50ms防抖
 			{
 				Key1_Flag = 1; // 设置按键状态，防止重复触发
 				Key1_Function = 1;
@@ -694,38 +698,38 @@ void SysClose()
 	PrintfString("Sys Close.");
 	PWMA_ENO = 0x0; // Close All;
 
-	IO_LED_White = 0;
+	IO_LED_White = POW_LED_CLOSE;
 	IO_LED_WORKLED = POW_LED_CLOSE;
 	// IO口强制为高阻模式
 	// UART接收 关闭
-	UART1_RxEnable(0);
+	//UART1_RxEnable(0);
 	// Time 关闭
-	Timer1_Stop();
-	Timer2_Stop();
+	//Timer1_Stop();
+	//Timer2_Stop();
 	//  ADC 关闭
 	//ADC_PowerOn(0);
 	// PWM 关闭
-	PWMA_DIS();
+	//PWMA_DIS();
 	// 省电模式
 
 	PCON |= 0x02; ;	//Sleep
 	return;
 }
 
-// 充电状态检测中断(下降沿触发)
-void INT0_ISR_Handler(void) interrupt INT0_VECTOR {
+// 充电状态检测中断(下降沿触发) 存在问题，需要改为轮询
+void INT3_ISR_Handler(void) interrupt INT3_VECTOR {
   s_ChargingStopFlag = 1;
-  PrintfString("INT0 event \r\n");
+  PrintString1("INT3 \r\n");
 }
 
-// 主菜单按键中断
+// 主菜单按键中断(下降沿触发)
 void INT2_ISR_Handler(void) interrupt INT2_VECTOR {
   if (cmd_Menu == CMD_Sys_Close) {
     // 系统关闭状态
-    cmd_Menu = CMD_Sys_Open;
-    SysOpen();
+    //cmd_Menu = CMD_Sys_Open;
+    //SysOpen();
   }
-  PrintfString("INT3 event  \r\n");
+  PrintString1("INT2 \r\n");
 }
 
 //========================================================================
@@ -742,4 +746,9 @@ void Timer1_ISR_Handler(void) interrupt TMR1_VECTOR // 进中断时已经清除�
   B_1ms_Count++;
   LED_WORKLED_50ms = 1;
   ADC_Timer_ms = 1;
+
+  if (B_1ms_Count > 60000)
+  {
+	  B_1ms_Count = 0;
+  }
 }
