@@ -106,6 +106,7 @@ sbit LogUART2_Tx = P1 ^ 7; // 日志UART2发送
 sbit IO_IN_Charging = P3 ^ 2; // [高阻输入] 充电输入口 [高阻输入][1:充电, 0:不充电]
 sbit IO_LED_WORKLED = P3 ^ 3; // [推挽输出] 工作指示灯 [0:工作, 1:不工作] 低电平亮
 sbit IO_LED_ERR     = P3 ^ 4; // [推挽输出] 运行异常LED灯 [1:正常, 0:异常] 低电平亮
+
 sbit ADC_BAT 		= P3 ^ 5; // [高阻输入] IN-电池电压
 sbit KEY1 			= P3 ^ 6; // [高阻输入]主菜单按键
 
@@ -174,17 +175,19 @@ void GPIO_config(void)
 	// P3-[0,1],[2,3,4]
 
 	// 设置P3.6，P3.7, P3.5为高阻输入
-	P3M0 = 0x00;
-	P3M1 = 0xe0;
+//	P3M0 = 0x00;
+//	P3M1 = 0xe0;
 
-	// 使能P3.6，P3.7口上拉
-	P3PU = 0xc0;
+//	// 使能P3.6，P3.7口上拉
+//	P3PU = 0xc0;
 
-	//[P1]
-	// p1-[1] uart2，双向口
-	// p1-[0,2~7] 推挽输出，控制MOS管
-	P1M0 = 0x78;
-	P1M1 = 0x00;
+//	//[P1]
+//	// p1-[1] uart2，双向口
+//	// p1-[0,2~7] 推挽输出，控制MOS管
+//	P1M0 = 0x78;
+//	P1M1 = 0x00;
+	  P1M0 = 0x3f; P1M1 = 0x00; //
+    P3M0 = 0x18; P3M1 = 0x64; 
 
 	IO_LED_WORKLED = POW_LED_CLOSE;
 
@@ -233,7 +236,7 @@ void UART_config(void)
 	COMx_InitStructure.UART_RxEnable = ENABLE;		// 接收允许,   ENABLE或DISABLE
 	UART_Configuration(UART1, &COMx_InitStructure); // 初始化串口2 USART1,USART2,USART3,USART4
 	NVIC_UART1_Init(ENABLE, Priority_3);			// 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
-	UART1_SW(UART1_SW_P16_P17);
+	UART1_SW(UART1_SW_P30_P31);
 }
 
 /************************ 定时器配置 ****************************/
@@ -293,13 +296,13 @@ void scanerWorkLEDChange(void)
 			{
 				IO_LED_WORKLED = POW_LED_OPEN;
 				show1_off0 = 1;
-				// PrintfString("work led show.");
+				 PrintfString("work led show.");
 			}
 			else
 			{
 				IO_LED_WORKLED = POW_LED_CLOSE;
 				show1_off0 = 0;
-				// PrintfString("work led off.");
+				 PrintfString("work led off.");
 			}
 
 			// 重置计算器
@@ -411,6 +414,7 @@ void main(void)
 	cmd_Menu = CMD_None_Led;
 	while (1)
 	{
+		//PrintfString("STC8");
 		// 按键检查
 		menuCheck();
 		if (cmd_Menu == CMD_Sys_Close) {
@@ -711,7 +715,7 @@ void SysClose()
 // 充电状态检测中断(下降沿触发)
 void INT0_ISR_Handler(void) interrupt INT0_VECTOR {
   s_ChargingStopFlag = 1;
-  PrintfString("INT0 event");
+  PrintfString("INT0 event \r\n");
 }
 
 // 主菜单按键中断
@@ -721,7 +725,7 @@ void INT2_ISR_Handler(void) interrupt INT2_VECTOR {
     cmd_Menu = CMD_Sys_Open;
     SysOpen();
   }
-  PrintfString("INT3 event");
+  PrintfString("INT3 event  \r\n");
 }
 
 //========================================================================
