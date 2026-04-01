@@ -220,7 +220,7 @@ enum CMDMenu
 enum CMDMenu cmd_Menu;
 
 /*************	本地函数声明	**************/
-void turnOnLEDWithCMDType(enum CMDMenu cmdMenu);
+void handleCmdMenu(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
 void begainSelfCheck();
 void endSelfCheck();
@@ -676,7 +676,7 @@ void menuCheck()
 			}
 
 			PrintfString2("cmd menu: %hd. \r\n", cmd_Menu);
-			turnOnLEDWithCMDType(cmd_Menu);
+			handleCmdMenu(cmd_Menu);
 		}
 
 		// Key2, 亮度调节
@@ -916,7 +916,7 @@ void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 	}
 }
 
-void turnOnLEDWithCMDType(enum CMDMenu cmdMenu)
+void handleCmdMenu(enum CMDMenu cmdMenu)
 {
 	if (CMD_Warn_Led_Flag == 1)
 	{
@@ -1174,7 +1174,7 @@ void SysOpen()
 	// Timer2_Run();
 	ADC_PowerOn(1);
 
-	turnOnLEDWithCMDType(cmd_Menu);
+	handleCmdMenu(cmd_Menu);
 	return;
 }
 
