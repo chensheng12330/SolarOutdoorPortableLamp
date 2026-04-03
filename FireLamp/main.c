@@ -84,6 +84,12 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 ******
 
 ******************************************/
+typedef struct {
+  unsigned int period;  // 周期（ms）
+  unsigned int counter; // 计数器
+  bit run;              // 运行标志
+} task_t;
+
 
 /*************	本地常量声明	**************/
 #define POW_LED_OPEN  1  // 电量LED灯开启
@@ -152,10 +158,11 @@ enum PWMDutyLevel pwm_DutyLevel;
 
 enum CMDMenu
 {
-	CMD_None_Led  = 0,	// 关闭所有灯
-	CMD_White_Led = 1,	// 开启一次白灯
-	CMD_Sys_Close = 2,	// 系统关机
-	CMD_Sys_Open  = 3,	// 系统开机
+	CMD_Sys_Init = 0, // 初使状态
+	CMD_Sys_Open = 1, // 系统开机
+	CMD_White_Led,	  // 开启一次白灯
+	CMD_Sys_Close,	  // 系统关机
+	CMD_None_NoDo,	  // 不处理,待机状态
 };
 
 enum CMDMenu cmd_Menu;
@@ -165,6 +172,9 @@ void handleCmdMenu(enum CMDMenu cmdMenu);
 void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel);
 void scanerChargingDetection(void);
 void scanerWhiteLEDControl(void);
+void Sysleep();
+void SysClose();
+void SysOpen();
 /*************  外部函数和变量声明 *****************/
 /******************* IO配置函数 *******************/
 
@@ -206,9 +216,9 @@ void Exti_config(void) {
 
   Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
   Ext_Inilize(EXT_INT2, &Exti_InitStructure); // 初始化
-  Ext_Inilize(EXT_INT3, &Exti_InitStructure); // 初始化
+  //Ext_Inilize(EXT_INT3, &Exti_InitStructure); // 初始化
   NVIC_INT2_Init(ENABLE, Priority_2);
-  NVIC_INT3_Init(ENABLE, Priority_1);
+  //NVIC_INT3_Init(ENABLE, Priority_1);
   // 中断使能, ENABLE/DISABLE; 优先级(低到高)
   // Priority_0,Priority_1,Priority_2,Priority_3
 }
@@ -365,11 +375,12 @@ void menuCheck()
 			Key1_Function = 0;
 
 			PrintfString("Key1 pressed.\r\n");
-			if (cmd_Menu >= CMD_None_Led || cmd_Menu <= CMD_Sys_Open)
+			if (cmd_Menu >= CMD_Sys_Init || 
+				cmd_Menu < CMD_None_NoDo)
 			{
-				if ((cmd_Menu + 1) > CMD_Sys_Open)
+				if ((cmd_Menu + 1) > CMD_None_NoDo)
 				{
-					cmd_Menu = CMD_None_Led;
+					cmd_Menu = CMD_Sys_Open;
 				}
 				else
 				{
@@ -378,10 +389,11 @@ void menuCheck()
 			}
 			else
 			{
-				cmd_Menu = CMD_None_Led;
+				cmd_Menu = CMD_Sys_Open;
 			}
 
 			PrintfString("cmd menu: %hd. \r\n", cmd_Menu);
+
 			handleCmdMenu(cmd_Menu);
 		}
 	}
@@ -413,23 +425,27 @@ void main(void)
 	#endif
 
 	// 初始化命令菜单状态
-	cmd_Menu = CMD_None_Led;
+	cmd_Menu = CMD_Sys_Init;
 	while (1)
 	{
-		//PrintfString("STC8");
-		// 按键检查
+		if (cmd_Menu == CMD_None_NoDo)
+		{
+			// 待机状态，不进行任何操作,可 进入省电模式
+			continue;
+		}
+		
+		// 按键检查扫描
 		menuCheck();
+		
 		if (cmd_Menu == CMD_Sys_Close) {
+			SysClose();
+			cmd_Menu = CMD_None_NoDo;
 			continue;
 		}
 
 		// 工作LED灯显示
 		scanerWorkLEDChange();
 
-		// 关灯状态，不进行后续操作
-		if (cmd_Menu == CMD_None_Led) {
-			continue;
-		}
 		// 电量显示
 		//scanerBatterVoltage();
 
@@ -447,13 +463,17 @@ void main(void)
 }
 
 // 充电状态检测
+
+static bit lastChargingState = 1; // 初始状态假设为充电中
 void scanerChargingDetection(void)
 {
-  if (s_ChargingStopFlag) {
-    s_ChargingStopFlag = 0;
-    PrintfString("charging stop\r\n");
-    S_OpenLedFlag = 1;
-  }
+	if (lastChargingState==1 && IO_IN_Charging==0)
+	{
+		// 充电状态从充电变为未充电，可能是充电完成或断开充电器
+		PrintfString("charging stop\r\n");
+		S_OpenLedFlag = 1; // 打开LED灯
+	}
+	lastChargingState = IO_IN_Charging; // 更新状态
 }
 
 // 白灯控制
@@ -464,7 +484,7 @@ void scanerWhiteLEDControl() {
     LED_White_Timer_Open_S = 1000; // 10s
     IO_LED_White = POW_LED_OPEN;
 
-		PrintfString("white led open.\r\n");
+	PrintfString("white led open.\r\n");
     //   PWMA_ENO = 0x0;
     //   PWM2N_OUT_EN();
   }
@@ -531,14 +551,15 @@ void handleCmdMenu(enum CMDMenu cmdMenu)
 	LED_WORKLED_Flag = 1;
 	switch (cmdMenu)
 	{
-	case CMD_None_Led: // 关闭所有灯
+	case CMD_None_NoDo: // 关闭所有灯
+	case CMD_Sys_Init:  // 初使状态，默认值
 		/* code */
-		PrintfString("close all led");
-		PWMA_ENO = 0x0; // Close All;
-		LED_WORKLED_Flag = 0;
-		LED_White_Timer_Open_S = 0;
-		IO_LED_White   = POW_LED_CLOSE;
-		IO_LED_WORKLED = POW_LED_CLOSE;
+		// PrintfString("close all led");
+		// PWMA_ENO = 0x0; // Close All;
+		// LED_WORKLED_Flag = 0;
+		// LED_White_Timer_Open_S = 0;
+		// IO_LED_White   = POW_LED_CLOSE;
+		// IO_LED_WORKLED = POW_LED_CLOSE;
 		break;
 	case CMD_White_Led: // 开启白灯
 		/* code */
@@ -712,23 +733,28 @@ void SysClose()
 	//PWMA_DIS();
 	// 省电模式
 
-	PCON |= 0x02; ;	//Sleep
+	//Sysleep();
 	return;
 }
 
-// 充电状态检测中断(下降沿触发) 存在问题，需要改为轮询
-void INT3_ISR_Handler(void) interrupt INT3_VECTOR {
-  s_ChargingStopFlag = 1;
-  PrintString1("INT3 \r\n");
+void Sysleep()
+{
+	PCON |= 0x02; ;	//Sleep
 }
+
+// 充电状态检测中断(下降沿触发) 存在问题，需要改为轮询
+// void INT3_ISR_Handler(void) interrupt INT3_VECTOR {
+//   //s_ChargingStopFlag = 1;
+//   //PrintString1("INT3 \r\n");
+// }
 
 // 主菜单按键中断(下降沿触发)
 void INT2_ISR_Handler(void) interrupt INT2_VECTOR {
-  if (cmd_Menu == CMD_Sys_Close) {
-    // 系统关闭状态
-    //cmd_Menu = CMD_Sys_Open;
-    //SysOpen();
-  }
+//   if (cmd_Menu == CMD_Sys_Close || cmd_Menu == CMD_None_NoDo) {
+//     // 系统关闭状态
+//     cmd_Menu = CMD_Sys_Open;
+//     SysOpen();
+//   }
   PrintString1("INT2 \r\n");
 }
 
