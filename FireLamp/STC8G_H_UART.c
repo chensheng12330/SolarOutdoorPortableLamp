@@ -13,6 +13,42 @@
 #include "STC8G_H_UART.h"
 #include <STDIO.H>
 #include <STDARG.H>
+#define UART_PRINTF_LIMIT 127
+
+static u16 g_uart_printf_count = 0;
+static bit g_uart_printf_limited = 0;
+static void (*g_uart_printf_send_func)(u8 *) = 0;
+
+static void UART_ResetPrintfGuard(void)
+{
+	g_uart_printf_count = 0;
+	g_uart_printf_limited = 0;
+	g_uart_printf_send_func = 0;
+}
+
+static bit UART_CanSendPrintfChar(void)
+{
+	if (g_uart_printf_count < UART_PRINTF_LIMIT)
+	{
+		g_uart_printf_count++;
+		return 1;
+	}
+
+	g_uart_printf_limited = 1;
+	return 0;
+}
+
+static void UART_PutCharDirect(u8 c)
+{
+	u8 ch[2];
+	ch[0] = c;
+	ch[1] = '\0';
+
+	if (g_uart_printf_send_func != 0)
+	{
+		g_uart_printf_send_func(ch);
+	}
+}
 //========================================================================
 //                               本地变量声明
 //========================================================================
@@ -268,16 +304,22 @@ void PrintString1(u8 *puts)
 {
     for (; *puts != 0;	puts++)  TX1_write2buff(*puts); 	//遇到停止符0结束
 }
+void PrintStr(u8 *puts)
+{
+	for (; *puts != 0; puts++)
+		TX1_write2buff(*puts); // 遇到停止符0结束
+}
 
 void PrintfString(const char *fmt, ...) {
-  char buffer[128];            // 定义缓冲区用于存储格式化后的字符串
   va_list args;                // 定义一个 va_list 类型变量，用于存储可变参数
+  UART_ResetPrintfGuard();
   va_start(args, fmt);         // 初始化 va_list 变量
-  vsprintf(buffer, fmt, args); // 将格式化后的内容存入 buffer
+  vprintf(fmt, args);
   va_end(args);                // 清理 va_list
 
-  // 打印输出
-  PrintString1(buffer);
+  if (g_uart_printf_limited) {
+    PrintString1("...");
+  }
   return;
 }
 #endif
@@ -310,14 +352,15 @@ void PrintString2(u8 *puts)
 
  void PrintfString(const char *fmt, ...)
  {
- 	char buffer[128];			 // 定义缓冲区用于存储格式化后的字符串
  	va_list args;				 // 定义一个 va_list 类型变量，用于存储可变参数
+	UART_ResetPrintfGuard();
  	va_start(args, fmt);		 // 初始化 va_list 变量
- 	vsprintf(buffer, fmt, args); // 将格式化后的内容存入 buffer
+ 	vprintf(fmt, args);
  	va_end(args);				 // 清理 va_list
 
- 	//打印输出
- 	PrintString2(buffer);
+	if (g_uart_printf_limited) {
+		PrintString2("...");
+	}
  	return;
  }
 #endif
@@ -399,7 +442,13 @@ void PrintString(u8 UARTx, u8 *puts)
 
 char putchar(char c)
 {
-	TX1_write2buff(c);
+	if (UART_CanSendPrintfChar()) {
+		if (g_uart_printf_send_func != 0) {
+			UART_PutCharDirect(c);
+		} else {
+			TX1_write2buff(c);
+		}
+	}
 	return c;
 }
 
@@ -407,7 +456,13 @@ char putchar(char c)
 
 char putchar(char c)
 {
-	TX2_write2buff(c);
+	if (UART_CanSendPrintfChar()) {
+		if (g_uart_printf_send_func != 0) {
+			UART_PutCharDirect(c);
+		} else {
+			TX2_write2buff(c);
+		}
+	}
 	return c;
 }
 
@@ -415,7 +470,13 @@ char putchar(char c)
 
 char putchar(char c)
 {
-	TX3_write2buff(c);
+	if (UART_CanSendPrintfChar()) {
+		if (g_uart_printf_send_func != 0) {
+			UART_PutCharDirect(c);
+		} else {
+			TX3_write2buff(c);
+		}
+	}
 	return c;
 }
 
@@ -423,7 +484,13 @@ char putchar(char c)
 
 char putchar(char c)
 {
-	TX4_write2buff(c);
+	if (UART_CanSendPrintfChar()) {
+		if (g_uart_printf_send_func != 0) {
+			UART_PutCharDirect(c);
+		} else {
+			TX4_write2buff(c);
+		}
+	}
 	return c;
 }
 
@@ -431,10 +498,13 @@ char putchar(char c)
 
 void uartToPrintf(void (*send_func)(u8 *), const char *fmt, ...)
 {
-	char buffer[128];			 // 定义缓冲区用于存储格式化后的字符串
 	va_list args;				 // 定义一个 va_list 类型变量，用于存储可变参数
+	UART_ResetPrintfGuard();
+	g_uart_printf_send_func = send_func;
 	va_start(args, fmt);		 // 初始化 va_list 变量
-	vsprintf(buffer, fmt, args); // 将格式化后的内容存入 buffer
+	vprintf(fmt, args);
 	va_end(args);				 // 清理 va_list
-	send_func(buffer);			 // 调用传入的发送函数，发送格式化后的字符串
+	if (g_uart_printf_limited && send_func != 0) {
+		send_func((u8 *)"...");
+	}
 }

@@ -143,6 +143,7 @@ u8	UART_Configuration(u8 UARTx, COMx_InitDefine *COMx);
 #ifdef UART1
 void TX1_write2buff(u8 dat);	//串口1发送函数
 void PrintString1(u8 *puts);
+void PrintStr(u8 *puts);
 void PrintfString(const char *fmt, ...);
 #endif
 #ifdef UART2

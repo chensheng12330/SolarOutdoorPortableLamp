@@ -1,4 +1,3 @@
-
 /**
  * @file main.c
  * @author sherwin.chen (chensheng12330@gmail.com)
@@ -34,7 +33,7 @@
 7. 主菜单按键
 */
 
-#define DEBUG_MODE 1 // 开发模式
+// #define DEBUG_MODE 1 // 开发模式
 
 #include "config.h"
 #include "STC8G_H_ADC.h"
@@ -47,10 +46,27 @@
 #include "STC8G_H_Timer.h"
 #include "STC8G_H_Exti.h"
 
+/* ====== 版本信息 ====== */
+#define FIRMWARE_VERSION "0.1"
+#define BUILD_DATE "2026-04-05"
+#define FIRMWARE_NAME "Fire Lamp Controller"
+
+/* ====== 调试宏定义 ====== */
+#ifdef DEBUG_MODE
+#define DEBUG_LOG PrintfString
+#define DEBUG_PRINT_STR PrintStr
+#else
+static void debug_log_empty(const char *fmt, ...) {}
+static void debug_print_empty(const char *str) {}
+#define DEBUG_LOG debug_log_empty
+#define DEBUG_PRINT_STR debug_print_empty
+#endif
+
 void KeyScan(void);
 void displayBatterPower(float inVol);
 void SysOpen();
 void SysClose();
+void printfStatus();
 
 /*************	功能说明	**************
 
@@ -84,23 +100,29 @@ https://blog.csdn.net/weixin_51026398/article/details/123776288?utm_medium=distr
 ******
 
 ******************************************/
-typedef struct {
-  unsigned int period;  // 周期（ms）
-  unsigned int counter; // 计数器
-  bit run;              // 运行标志
-} task_t;
+typedef struct
+{
+	u16 period;	 // 周期（ms）[装载时设置为任务执行间隔时间]
+	u16 counter; // 计数器    [每次递减，直到0时触发事件并重置为period]
+	u8 run;		 // 运行标志   [0: 不运行, 1: 运行中, 任务执行时设置为1，主循环检测到后执行任务并重置为0]
+} task_t;		 // 定义一个简单的任务结构体，用于管理定时任务
 
+static volatile task_t task_key = {1, 1, 0};			 // 1ms 按键扫描
+static volatile task_t task_sys_led = {1000, 1000, 0};	 // 1000ms 系统LED
+static volatile task_t task_nmos_led = {1000, 1000, 0};	 // 1s NMOS LED
+static volatile task_t task_charg_det = {2000, 2000, 0}; // 2s 充电状态检测
+static volatile task_t task_uart_log = {3000, 3000, 0};	 // 3s 日志输出
 
 /*************	本地常量声明	**************/
-#define POW_LED_OPEN  1  // 电量LED灯开启
-#define POW_LED_CLOSE 0  // 电量LED灯关闭
+#define POW_LED_OPEN 1	// 电量LED灯开启
+#define POW_LED_CLOSE 0 // 电量LED灯关闭
 
 /*************	本地变量声明	**************/
 
-//P1排口 推 0-5 推挽输出, 6-7: 双向口
-sbit IO_LED_White = P1 ^ 3;    // OUT-白光LED驱动控制开关，默认关
+// P1排口 推 0-5 推挽输出, 6-7: 双向口
+sbit IO_LED_White = P1 ^ 3; // OUT-白光LED驱动控制开关，默认关
 // 电量显示LED [低电平亮]
-sbit BAT_POW_LED4 = P1 ^ 5; 
+sbit BAT_POW_LED4 = P1 ^ 5;
 sbit BAT_POW_LED3 = P1 ^ 4;
 sbit BAT_POW_LED2 = P1 ^ 1;
 sbit BAT_POW_LED1 = P1 ^ 0;
@@ -111,39 +133,30 @@ sbit LogUART2_Tx = P1 ^ 7; // 日志UART2发送
 // P3排口
 sbit IO_IN_Charging = P3 ^ 2; // [高阻输入] 充电输入口 [高阻输入][1:充电, 0:不充电]
 sbit IO_LED_WORKLED = P3 ^ 3; // [推挽输出] 工作指示灯 [0:工作, 1:不工作] 低电平亮
-sbit IO_LED_ERR     = P3 ^ 4; // [推挽输出] 运行异常LED灯 [1:正常, 0:异常] 低电平亮
+sbit IO_LED_ERR = P3 ^ 4;	  // [推挽输出] 运行异常LED灯 [1:正常, 0:异常] 低电平亮
 
-sbit ADC_BAT 		= P3 ^ 5; // [高阻输入] IN-电池电压
-sbit KEY1 			= P3 ^ 6; // [高阻输入]主菜单按键
+sbit ADC_BAT = P3 ^ 5; // [高阻输入] IN-电池电压
+sbit KEY1 = P3 ^ 6;	   // [高阻输入]主菜单按键
 
-//其它功能标识
+// 其它功能标识
 u16 Key1_cnt;
 bit Key1_Flag;
-bit B_1ms; // 1ms标志
 bit Key1_Function;
 bit Key1_Long_Function;
-
 
 // PWM模块
 PWMx_Duty PWMA_Duty;
 u16 PWMPeriod = 1000; // PWM周期设置 HZ: 1/1000  = 1ms
 
 u16 LED_WORKLED_Flag = 0; // 默认值为0
-u16 LED_WORKLED_50ms = 0;
 
-u16 s_ChargingStopFlag = 0;
 u16 S_OpenLedFlag = 0;
 u16 LED_White_Timer_Open_S = 0;
-u16 LED_White_Timer_1s = 0;
-u16 LED_White_Timer_ms = 0;
 
-u32 WorkLED2S_Count;
 bit show1_off0;
 
 u32 ADC10S_Count;
 u16 ADC_Timer_ms;
-
-u32 B_1ms_Count; // 1ms累加计数器,可用于事件循环执行时间间隔
 
 enum PWMDutyLevel
 {
@@ -165,7 +178,7 @@ enum CMDMenu
 	CMD_None_NoDo,	  // 不处理,待机状态
 };
 
-enum CMDMenu cmd_Menu;
+volatile enum CMDMenu cmd_Menu;
 
 /*************	本地函数声明	**************/
 void handleCmdMenu(enum CMDMenu cmdMenu);
@@ -185,42 +198,44 @@ void GPIO_config(void)
 	// P3-[0,1],[2,3,4]
 
 	// 设置P3.6，P3.7, P3.5为高阻输入
-//	P3M0 = 0x00;
-//	P3M1 = 0xe0;
+	//	P3M0 = 0x00;
+	//	P3M1 = 0xe0;
 
-//	// 使能P3.6，P3.7口上拉
-//	P3PU = 0xc0;
+	//	// 使能P3.6，P3.7口上拉
+	//	P3PU = 0xc0;
 
-//	//[P1]
-//	// p1-[1] uart2，双向口
-//	// p1-[0,2~7] 推挽输出，控制MOS管
+	//	//[P1]
+	//	// p1-[1] uart2，双向口
+	//	// p1-[0,2~7] 推挽输出，控制MOS管
 	P1M0 = 0x78;
 	P1M1 = 0x00;
-		// P1M0 = 0x3f; P1M1 = 0x00; //
-    	// P3M0 = 0x18; P3M1 = 0x64;
-		// P3PU = 0x60;
+	// P1M0 = 0x3f; P1M1 = 0x00; //
+	// P3M0 = 0x18; P3M1 = 0x64;
+	// P3PU = 0x60;
 
 	P3M0 = 0x18;
 	P3M1 = 0xe0;
 	P3PU = 0xe0;
 
-	IO_LED_WORKLED = POW_LED_CLOSE;
-	IO_LED_White   = POW_LED_CLOSE;
+	IO_LED_WORKLED = POW_LED_OPEN;
+	IO_LED_White = POW_LED_CLOSE;
+	IO_LED_ERR = POW_LED_OPEN;
 }
 
-void Exti_config(void) {
+void Exti_config(void)
+{
 
-  EXTI_InitTypeDef Exti_InitStructure; // 结构定义
-  // P3.2: [高阻输入] 充电输入口 [高阻输入]  P3.2/INTO/
-  // P3.6: [高阻输入] 主菜单按键            P3.6/INT2/
+	EXTI_InitTypeDef Exti_InitStructure; // 结构定义
+	// P3.2: [高阻输入] 充电输入口 [高阻输入]  P3.2/INTO/
+	// P3.6: [高阻输入] 主菜单按键            P3.6/INT2/
 
-  Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
-  Ext_Inilize(EXT_INT2, &Exti_InitStructure); // 初始化
-  //Ext_Inilize(EXT_INT3, &Exti_InitStructure); // 初始化
-  NVIC_INT2_Init(ENABLE, Priority_2);
-  //NVIC_INT3_Init(ENABLE, Priority_1);
-  // 中断使能, ENABLE/DISABLE; 优先级(低到高)
-  // Priority_0,Priority_1,Priority_2,Priority_3
+	Exti_InitStructure.EXTI_Mode = EXT_MODE_Fall; // 中断模式,   EXT_MODE_RiseFall,EXT_MODE_Fall
+	Ext_Inilize(EXT_INT2, &Exti_InitStructure);	  // 初始化
+	// Ext_Inilize(EXT_INT3, &Exti_InitStructure); // 初始化
+	NVIC_INT2_Init(ENABLE, Priority_2);
+	// NVIC_INT3_Init(ENABLE, Priority_1);
+	//  中断使能, ENABLE/DISABLE; 优先级(低到高)
+	//  Priority_0,Priority_1,Priority_2,Priority_3
 }
 
 /******************* AD配置函数 *******************/
@@ -239,11 +254,11 @@ void Exti_config(void) {
 // }
 
 /***************  串口2初始化函数,调试输出 *****************/
-void UART_config(void) 
+void UART_config(void)
 {
-	COMx_InitDefine COMx_InitStructure;			   // 结构定义
-	COMx_InitStructure.UART_Mode = UART_8bit_BRTx; // 模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,UART_9bit_BRTx
-	COMx_InitStructure.UART_BRT_Use   = BRT_Timer2;			//选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BRT_Timer2, 所以不用选择),注意不能再使用Timer2作为中断
+	COMx_InitDefine COMx_InitStructure;				// 结构定义
+	COMx_InitStructure.UART_Mode = UART_8bit_BRTx;	// 模式,   UART_ShiftRight,UART_8bit_BRTx,UART_9bit,UART_9bit_BRTx
+	COMx_InitStructure.UART_BRT_Use = BRT_Timer2;	// 选择波特率发生器, BRT_Timer2 (注意: 串口2固定使用BRT_Timer2, 所以不用选择),注意不能再使用Timer2作为中断
 	COMx_InitStructure.UART_BaudRate = 115200ul;	// 波特率,     110 ~ 115200
 	COMx_InitStructure.UART_RxEnable = ENABLE;		// 接收允许,   ENABLE或DISABLE
 	UART_Configuration(UART1, &COMx_InitStructure); // 初始化串口2 USART1,USART2,USART3,USART4
@@ -257,13 +272,13 @@ void Timer_config(void)
 	TIM_InitTypeDef TIM_InitStructure; // 结构定义
 
 	//[Timer1 按键检测信号源1ms] 定时器1做16位自动重装, 中断频率为1000HZ
-	TIM_InitStructure.TIM_Mode = TIM_16BitAutoReload;			 // 指定工作模式,   TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_T1Stop
-	TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;				 // 指定时钟源, TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
-	TIM_InitStructure.TIM_ClkOut = DISABLE;						 // 是否输出高速脉冲, ENABLE或DISABLE
+	TIM_InitStructure.TIM_Mode = TIM_16BitAutoReload;			// 指定工作模式,   TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_T1Stop
+	TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;				// 指定时钟源, TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
+	TIM_InitStructure.TIM_ClkOut = DISABLE;						// 是否输出高速脉冲, ENABLE或DISABLE
 	TIM_InitStructure.TIM_Value = 65536UL - (MAIN_Fosc / 1000); // 初值,
-	TIM_InitStructure.TIM_Run = ENABLE;							 // 是否初始化后启动定时器, ENABLE或DISABLE
-	Timer_Inilize(Timer1, &TIM_InitStructure);					 // 初始化Timer1	  Timer0,Timer1,Timer2,Timer3,Timer4
-	NVIC_Timer1_Init(ENABLE, Priority_0);						 // 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
+	TIM_InitStructure.TIM_Run = ENABLE;							// 是否初始化后启动定时器, ENABLE或DISABLE
+	Timer_Inilize(Timer1, &TIM_InitStructure);					// 初始化Timer1	  Timer0,Timer1,Timer2,Timer3,Timer4
+	NVIC_Timer1_Init(ENABLE, Priority_0);						// 中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,Priority_2,Priority_3
 }
 
 void PWM_config(void)
@@ -297,28 +312,18 @@ void ______Hal__WhileTast() {}
 // 工作LED闪显
 void scanerWorkLEDChange(void)
 {
-	if (LED_WORKLED_Flag == 1 && LED_WORKLED_50ms == 1)
+	if (LED_WORKLED_Flag == 1)
 	{
-		LED_WORKLED_50ms = 0;
-		WorkLED2S_Count++;
-		if (WorkLED2S_Count >= 1500)
+		// 交换显示
+		if (show1_off0 == 0)
 		{
-			// 交换显示
-			if (show1_off0 == 0)
-			{
-				IO_LED_WORKLED = POW_LED_OPEN;
-				show1_off0 = 1;
-				// PrintfString("work led show.");
-			}
-			else
-			{
-				IO_LED_WORKLED = POW_LED_CLOSE;
-				show1_off0 = 0;
-				// PrintfString("work led off.");
-			}
-
-			// 重置计算器
-			WorkLED2S_Count = 0;
+			IO_LED_WORKLED = POW_LED_OPEN;
+			show1_off0 = 1;
+		}
+		else
+		{
+			IO_LED_WORKLED = POW_LED_CLOSE;
+			show1_off0 = 0;
 		}
 	}
 }
@@ -343,18 +348,16 @@ void scanerBatterVoltage()
 
 			if (adcResVal == 4096 || adcResVal < 1) // 数据异常时
 			{
-				PrintfString("ADC error. val: %ld \r\n", adcResVal);
+				DEBUG_LOG("ADC error. val: %ld \r\n", adcResVal);
 				return;
 			}
 			// 计算电压值
 			// inVol = Res*RefVol / 1024
 			// 外部电池电压4.2v  (获取内部参考电压)
 			// 外部参考电压为2.5v， IO口电压的计算公式应为:  2500 * adc_result / 4096, 待调试.
-			fCalVol = (adcResVal * 4.2f) / 1024.0f; // 单位mv（1196） 
+			fCalVol = (adcResVal * 4.2f) / 1024.0f; // 单位mv（1196）
 
-#ifdef DEBUG_MODE
-			PrintfString("batter voltage: %f v. adcResVal: %ld\r\n", fCalVol, adcResVal);
-#endif
+			DEBUG_LOG("batter voltage: %f v. adcResVal: %ld\r\n", fCalVol, adcResVal);
 			// 电压值转换LED灯显示
 			displayBatterPower(fCalVol);
 		}
@@ -365,101 +368,151 @@ void scanerBatterVoltage()
 void menuCheck()
 {
 	// 按键功能菜单
-	if (B_1ms == 1) // 1ms检测一次
+	KeyScan();
+
+	// Key1, 灯控制循环
+	if (Key1_Function)
 	{
-		B_1ms = 0;
-		KeyScan();
+		Key1_Function = 0;
 
-		// Key1, 灯控制循环
-		if (Key1_Function) {
-			Key1_Function = 0;
-
-			PrintfString("Key1 pressed.\r\n");
-			if (cmd_Menu >= CMD_Sys_Init || 
-				cmd_Menu < CMD_None_NoDo)
-			{
-				if ((cmd_Menu + 1) > CMD_None_NoDo)
-				{
-					cmd_Menu = CMD_Sys_Open;
-				}
-				else
-				{
-					cmd_Menu++;
-				}
-			}
-			else
+		DEBUG_PRINT_STR("Key1 pressed.\r\n");
+		if (cmd_Menu >= CMD_Sys_Init &&
+			cmd_Menu < CMD_None_NoDo)
+		{
+			if ((cmd_Menu + 1) > CMD_Sys_Close)
 			{
 				cmd_Menu = CMD_Sys_Open;
 			}
-
-			PrintfString("cmd menu: %hd. \r\n", cmd_Menu);
-
-			handleCmdMenu(cmd_Menu);
+			else
+			{
+				cmd_Menu++;
+			}
 		}
+		else
+		{
+			cmd_Menu = CMD_Sys_Open;
+		}
+
+		DEBUG_LOG("cmd menu: %d. \r\n", (int)cmd_Menu);
+
+		// 处理菜单命令
+		handleCmdMenu(cmd_Menu);
 	}
 }
 
-/**********************************************/
-void main(void)
+/*************重要提示：系统初始化函数     **************/
+/**
+ * @brief  系统初始化配置函数
+ * @param  无
+ * @return 无
+ * @note   初始化所有硬件模块和系统参数
+ * @author Sherwin Chen
+ * @date   2026-04-05
+ */
+void SystemInit(void)
 {
-
 	EAXSFR(); /* 扩展寄存器访问使能 */
 
 	// 初始化GPIO
 	GPIO_config();
 	// 初始化外部中断
 	Exti_config();
+
+#ifdef DEBUG_MODE
 	// 初始化UART
 	UART_config();
+#endif
+
 	// 初始化定时器
 	Timer_config();
 	// 初始化ADC
-	//ADC_config();
+	// ADC_config();
 	// 初始化PWM
-	//PWM_config();
+	// PWM_config();
 	// 启用全局中断
 	EA = 1;
 
-	#ifdef DEBUG_MODE
-	PrintfString("STC8 Fire Lamp Programme!\r\n"); // UART2发送一个字符串
-	#endif
+	// 输出启动信息
+	DEBUG_LOG("%s v%s (Build: %s)\r\n", FIRMWARE_NAME, FIRMWARE_VERSION, BUILD_DATE);
+	DEBUG_PRINT_STR("Sherwin.Chen \r\n");
+	DEBUG_PRINT_STR("System initialized successfully.\r\n");
+}
+
+/*************主程序入口             **************/
+void main(void)
+{
+	SystemInit();
 
 	// 初始化命令菜单状态
 	cmd_Menu = CMD_Sys_Init;
 	while (1)
 	{
+		// UART日志任务
+		if (task_uart_log.run)
+		{
+			task_uart_log.run = 0;
+			printfStatus();
+		}
 		if (cmd_Menu == CMD_None_NoDo)
 		{
-			// 待机状态，不进行任何操作,可 进入省电模式
+			// 待机状态，不进行任何操作,可进入省电模式
 			continue;
 		}
-		
+
 		// 按键检查扫描
-		menuCheck();
-		
-		if (cmd_Menu == CMD_Sys_Close) {
-			SysClose();
+		if (task_key.run)
+		{
+			task_key.run = 0;
+			menuCheck();
+
+			// 未初使化时，告诉用户需要开机启动
+			if (cmd_Menu == CMD_Sys_Init)
+			{
+				IO_LED_ERR = !IO_LED_ERR;
+				IO_LED_WORKLED = POW_LED_OPEN;
+				continue;
+			}
+		}
+		IO_LED_ERR = POW_LED_CLOSE;
+
+		if (cmd_Menu == CMD_Sys_Close)
+		{
 			cmd_Menu = CMD_None_NoDo;
 			continue;
 		}
 
 		// 工作LED灯显示
-		scanerWorkLEDChange();
+		if (task_sys_led.run)
+		{
+			task_sys_led.run = 0;
+			scanerWorkLEDChange();
+		}
+
+		// NMOS LED 控制任务
+		if (task_nmos_led.run)
+		{
+			task_nmos_led.run = 0;
+			scanerWhiteLEDControl();
+		}
+
+		// 充电检测任务
+		if (task_charg_det.run)
+		{
+			task_charg_det.run = 0;
+			if (cmd_Menu != CMD_Sys_Init)
+			{
+				scanerChargingDetection();
+			}
+		}
 
 		// 电量显示
-		//scanerBatterVoltage();
-
-		// 1秒一次检测
-		if (B_1ms_Count % 1000 == 0) { 
-			
-			// 充电状态检测
-			scanerChargingDetection();
-
-			// LED灯开关控制
-			scanerWhiteLEDControl();
-        }
-		
+		// scanerBatterVoltage();
 	}
+}
+
+void printfStatus(void)
+{
+	DEBUG_LOG("menu: %d, I_Charg: %d, O_LED: %d, KEY: %d\r\n", (int)cmd_Menu, (int)IO_IN_Charging, (int)IO_LED_White, (int)KEY1);
 }
 
 // 充电状态检测
@@ -467,39 +520,44 @@ void main(void)
 static bit lastChargingState = 1; // 初始状态假设为充电中
 void scanerChargingDetection(void)
 {
-	if (lastChargingState==1 && IO_IN_Charging==0)
+	// 从高电平变成低电平时 (启动时拉高，IO口接下拉电阻  5v -res1k - io(4.7k) -res2-10k -  gnd)
+	if (lastChargingState == 1 && IO_IN_Charging == 0)
 	{
 		// 充电状态从充电变为未充电，可能是充电完成或断开充电器
-		PrintfString("charging stop\r\n");
+		DEBUG_PRINT_STR("charging stop\r\n");
 		S_OpenLedFlag = 1; // 打开LED灯
 	}
 	lastChargingState = IO_IN_Charging; // 更新状态
 }
 
-// 白灯控制
-void scanerWhiteLEDControl() {
-  // LED灯开关控制
-  if (S_OpenLedFlag) {
-    S_OpenLedFlag = 0;           // 防止重复触发
-    LED_White_Timer_Open_S = 1000; // 10s
-    IO_LED_White = POW_LED_OPEN;
+// 白灯控制，1s调用频率
+void scanerWhiteLEDControl()
+{
+	// LED灯开关控制
+	if (S_OpenLedFlag)
+	{
+		S_OpenLedFlag = 0;			  // 防止重复触发
+		LED_White_Timer_Open_S = 300; // 1分钟
+		IO_LED_White = POW_LED_OPEN;
 
-	PrintfString("white led open.\r\n");
-    //   PWMA_ENO = 0x0;
-    //   PWM2N_OUT_EN();
-  }
+		DEBUG_PRINT_STR("white led open.\r\n");
+		//   PWMA_ENO = 0x0;
+		//   PWM2N_OUT_EN();
+	}
 
-  // 判断LED灯是否计时停止
-  if (LED_White_Timer_Open_S > 0) {
-    LED_White_Timer_Open_S--;
-    if (LED_White_Timer_Open_S == 0) {
-      IO_LED_White = POW_LED_CLOSE;
+	// 判断LED灯是否计时停止
+	if (LED_White_Timer_Open_S > 0)
+	{
+		LED_White_Timer_Open_S--;
+		if (LED_White_Timer_Open_S == 0)
+		{
+			IO_LED_White = POW_LED_CLOSE;
 
-	  PrintfString("white led close.\r\n");
-      // PWMA_ENO = 0x0;
-      // PWM2N_OUT_DIS();
-    }
-  }
+			DEBUG_PRINT_STR("white led close.\r\n");
+			// PWMA_ENO = 0x0;
+			// PWM2N_OUT_DIS();
+		}
+	}
 }
 
 void ______Hal__FunctionSet() {}
@@ -542,38 +600,39 @@ void setPWMWithLEDBrightness(enum PWMDutyLevel pwmLevel)
 		// 保存已设置值
 		PWMA_Duty.PWM_COM_Duty = curPWMDuty;
 		PWMA_Duty2(curPWMDuty);
-		PrintfString("Update PWM Duty: %d \r\n", curPWMDuty);
+		DEBUG_LOG("Update PWM Duty: %d \r\n", curPWMDuty);
 	}
 }
 
 void handleCmdMenu(enum CMDMenu cmdMenu)
 {
-	LED_WORKLED_Flag = 1;
 	switch (cmdMenu)
 	{
 	case CMD_None_NoDo: // 关闭所有灯
-	case CMD_Sys_Init:  // 初使状态，默认值
+	case CMD_Sys_Init:	// 初使状态，默认值
 		/* code */
 		// PrintfString("close all led");
 		// PWMA_ENO = 0x0; // Close All;
 		// LED_WORKLED_Flag = 0;
-		// LED_White_Timer_Open_S = 0;
+		// LED_White_Timer_open_S = 0;
 		// IO_LED_White   = POW_LED_CLOSE;
 		// IO_LED_WORKLED = POW_LED_CLOSE;
+		LED_WORKLED_Flag = 0;
 		break;
 	case CMD_White_Led: // 开启白灯
 		/* code */
-		PrintfString("open white led");
+		DEBUG_PRINT_STR("open white led\r\n");
 		S_OpenLedFlag = 1;
+		LED_WORKLED_Flag = 1;
 		break;
 	case CMD_Sys_Close: // 系统关机
 		/* code */
-		PrintfString("sys close");
+		// PrintfString("sys close");
 		SysClose();
 		break;
 	case CMD_Sys_Open: // 系统开机
 		/* code */
-		PrintfString("sys open");
+		// PrintfString("sys open");
 		SysOpen();
 	default:
 		break;
@@ -657,7 +716,7 @@ void displayBatterPower(float inVol)
 		break;
 	}
 
-	PrintfString("Battery level: %d", level);
+	DEBUG_LOG("Battery level: %d\r\n", level);
 }
 
 //========================================================================
@@ -677,7 +736,7 @@ void KeyScan(void)
 		if (!Key1_Flag)
 		{
 			Key1_cnt++;
-			if (Key1_cnt >= 500) // 50ms防抖
+			if (Key1_cnt >= 60) // 50ms防抖
 			{
 				Key1_Flag = 1; // 设置按键状态，防止重复触发
 				Key1_Function = 1;
@@ -698,13 +757,14 @@ void KeyScan(void)
 void SysOpen()
 {
 	cmd_Menu = CMD_Sys_Open;
-	PrintfString("Sys Open.");
+	DEBUG_PRINT_STR("Sys Open.\r\n");
 	pwm_DutyLevel = PWM_Duty_Level_75;
+	LED_WORKLED_Flag = POW_LED_OPEN;
 
 	UART1_RxEnable(1);
 	Timer1_Run(1);
 	Timer2_Run(1);
-	//ADC_PowerOn(1);
+	// ADC_PowerOn(1);
 
 	return;
 }
@@ -716,30 +776,32 @@ void SysOpen()
 void SysClose()
 {
 	cmd_Menu = CMD_Sys_Close;
-	PrintfString("Sys Close.");
+	LED_WORKLED_Flag = POW_LED_CLOSE;
+	DEBUG_PRINT_STR("Sys Close.\r\n");
 	PWMA_ENO = 0x0; // Close All;
 
 	IO_LED_White = POW_LED_CLOSE;
 	IO_LED_WORKLED = POW_LED_CLOSE;
 	// IO口强制为高阻模式
 	// UART接收 关闭
-	//UART1_RxEnable(0);
+	// UART1_RxEnable(0);
 	// Time 关闭
-	//Timer1_Stop();
-	//Timer2_Stop();
+	// Timer1_Stop();
+	// Timer2_Stop();
 	//  ADC 关闭
-	//ADC_PowerOn(0);
+	// ADC_PowerOn(0);
 	// PWM 关闭
-	//PWMA_DIS();
+	// PWMA_DIS();
 	// 省电模式
 
-	//Sysleep();
+	// Sysleep();
 	return;
 }
 
 void Sysleep()
 {
-	PCON |= 0x02; ;	//Sleep
+	PCON |= 0x02;
+	; // Sleep
 }
 
 // 充电状态检测中断(下降沿触发) 存在问题，需要改为轮询
@@ -749,13 +811,15 @@ void Sysleep()
 // }
 
 // 主菜单按键中断(下降沿触发)
-void INT2_ISR_Handler(void) interrupt INT2_VECTOR {
-//   if (cmd_Menu == CMD_Sys_Close || cmd_Menu == CMD_None_NoDo) {
-//     // 系统关闭状态
-//     cmd_Menu = CMD_Sys_Open;
-//     SysOpen();
-//   }
-  PrintString1("INT2 \r\n");
+void INT2_ISR_Handler(void) interrupt INT2_VECTOR
+{
+	if (cmd_Menu == CMD_None_NoDo || cmd_Menu == CMD_Sys_Close)
+	{
+		// 系统关闭状态时，切换为系统开机状态
+		cmd_Menu = CMD_Sys_Init;
+		// 等待keyscan扫描到按键按下，触发菜单切换
+		DEBUG_PRINT_STR("cmd:init \r\n");
+	}
 }
 
 //========================================================================
@@ -767,14 +831,38 @@ void INT2_ISR_Handler(void) interrupt INT2_VECTOR {
 //========================================================================
 void Timer1_ISR_Handler(void) interrupt TMR1_VECTOR // 进中断时已经清除标志
 {
-  // TODO: 在此处添加用户代码
-  B_1ms = 1;
-  B_1ms_Count++;
-  LED_WORKLED_50ms = 1;
-  ADC_Timer_ms = 1;
 
-  if (B_1ms_Count > 60000)
-  {
-	  B_1ms_Count = 0;
-  }
+	// --- UART日志任务 ---
+	if (--task_uart_log.counter < 1)
+	{
+		task_uart_log.counter = task_uart_log.period;
+		task_uart_log.run = 1;
+	}
+	// --- 按键任务 ---
+	if (--task_key.counter < 1)
+	{
+		task_key.counter = task_key.period;
+		task_key.run = 1;
+	}
+
+	// --- 系统LED任务 ---
+	if (--task_sys_led.counter == 0)
+	{
+		task_sys_led.counter = task_sys_led.period;
+		task_sys_led.run = 1;
+	}
+
+	// --- NMOS LED 任务 ---
+	if (--task_nmos_led.counter == 0)
+	{
+		task_nmos_led.counter = task_nmos_led.period;
+		task_nmos_led.run = 1;
+	}
+
+	// --- 充电检测任务 ---
+	if (--task_charg_det.counter == 0)
+	{
+		task_charg_det.counter = task_charg_det.period;
+		task_charg_det.run = 1;
+	}
 }
