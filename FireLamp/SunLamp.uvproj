@@ -46,11 +46,11 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\list\</OutputDirectory>
-          <OutputName>SunLamp</OutputName>
+          <OutputName>FireLamp</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
-          <DebugInformation>1</DebugInformation>
+          <DebugInformation>0</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\list\</ListingPath>
           <HexFormatSelection>0</HexFormatSelection>

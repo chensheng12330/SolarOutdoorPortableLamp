@@ -33,7 +33,7 @@
 7. 主菜单按键
 */
 
-// #define DEBUG_MODE 1 // 开发模式
+ #define DEBUG_MODE 1 // 开发模式
 
 #include "config.h"
 #include "STC8G_H_ADC.h"
@@ -146,7 +146,8 @@ bit Key1_Long_Function;
 
 // PWM模块
 PWMx_Duty PWMA_Duty;
-u16 PWMPeriod = 1000; // PWM周期设置 HZ: 1/1000  = 1ms
+u16 PWMPeriod = 1000; // PWM周期设置 HZ: 1/1000 = 1ms   1*22ms = 22ms   1/22
+// 计数越长，周期越小
 
 u16 LED_WORKLED_Flag = 0; // 默认值为0
 
@@ -284,7 +285,7 @@ void Timer_config(void)
 void PWM_config(void)
 {
 	PWMx_InitDefine PWMx_InitStructure;
-	PWMA_Duty.PWM_COM_Duty = PWMPeriod * 2 / 3;
+	PWMA_Duty.PWM_COM_Duty = PWMPeriod / 100 * 68; // 3/4.2 , LED 3v电压
 
 	// 调试代码
 	PWMA_Duty.PWM2_Duty = PWMA_Duty.PWM_COM_Duty;
@@ -428,7 +429,7 @@ void SystemInit(void)
 	// 初始化ADC
 	// ADC_config();
 	// 初始化PWM
-	// PWM_config();
+	PWM_config();
 	// 启用全局中断
 	EA = 1;
 
@@ -530,6 +531,18 @@ void scanerChargingDetection(void)
 	lastChargingState = IO_IN_Charging; // 更新状态
 }
 
+void PMW_LED_Close(){
+	// IO_LED_White
+	PWMA_DIS();
+	PWM2N_OUT_DIS();
+}
+
+void PMW_LED_Open(){
+	// IO_LED_White
+	PWMA_DIS();
+	PWM2N_OUT_EN();
+}
+
 // 白灯控制，1s调用频率
 void scanerWhiteLEDControl()
 {
@@ -538,11 +551,10 @@ void scanerWhiteLEDControl()
 	{
 		S_OpenLedFlag = 0;			  // 防止重复触发
 		LED_White_Timer_Open_S = 300; // 1分钟
-		IO_LED_White = POW_LED_OPEN;
+		//IO_LED_White = POW_LED_OPEN;
+		PMW_LED_Open();
 
 		DEBUG_PRINT_STR("white led open.\r\n");
-		//   PWMA_ENO = 0x0;
-		//   PWM2N_OUT_EN();
 	}
 
 	// 判断LED灯是否计时停止
@@ -551,7 +563,8 @@ void scanerWhiteLEDControl()
 		LED_White_Timer_Open_S--;
 		if (LED_White_Timer_Open_S == 0)
 		{
-			IO_LED_White = POW_LED_CLOSE;
+			//IO_LED_White = POW_LED_CLOSE;
+			PMW_LED_Close();
 
 			DEBUG_PRINT_STR("white led close.\r\n");
 			// PWMA_ENO = 0x0;
@@ -615,8 +628,6 @@ void handleCmdMenu(enum CMDMenu cmdMenu)
 		// PWMA_ENO = 0x0; // Close All;
 		// LED_WORKLED_Flag = 0;
 		// LED_White_Timer_open_S = 0;
-		// IO_LED_White   = POW_LED_CLOSE;
-		// IO_LED_WORKLED = POW_LED_CLOSE;
 		LED_WORKLED_Flag = 0;
 		break;
 	case CMD_White_Led: // 开启白灯
@@ -778,9 +789,9 @@ void SysClose()
 	cmd_Menu = CMD_Sys_Close;
 	LED_WORKLED_Flag = POW_LED_CLOSE;
 	DEBUG_PRINT_STR("Sys Close.\r\n");
-	PWMA_ENO = 0x0; // Close All;
 
-	IO_LED_White = POW_LED_CLOSE;
+	PMW_LED_Close();
+	//IO_LED_White = POW_LED_CLOSE;
 	IO_LED_WORKLED = POW_LED_CLOSE;
 	// IO口强制为高阻模式
 	// UART接收 关闭
@@ -791,7 +802,6 @@ void SysClose()
 	//  ADC 关闭
 	// ADC_PowerOn(0);
 	// PWM 关闭
-	// PWMA_DIS();
 	// 省电模式
 
 	// Sysleep();
