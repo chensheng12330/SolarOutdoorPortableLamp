@@ -33,7 +33,7 @@
 7. 主菜单按键
 */
 
- #define DEBUG_MODE 1 // 开发模式
+ //#define DEBUG_MODE 1 // 开发模式
 
 #include "config.h"
 #include "STC8G_H_ADC.h"
@@ -110,7 +110,7 @@ typedef struct
 static volatile task_t task_key = {1, 1, 0};			 // 1ms 按键扫描
 static volatile task_t task_sys_led = {1000, 1000, 0};	 // 1000ms 系统LED
 static volatile task_t task_nmos_led = {1000, 1000, 0};	 // 1s NMOS LED
-static volatile task_t task_charg_det = {2000, 2000, 0}; // 2s 充电状态检测
+static volatile task_t task_charg_det = {500, 500, 0};   // 500ms充电状态检测
 static volatile task_t task_uart_log = {3000, 3000, 0};	 // 3s 日志输出
 
 /*************	本地常量声明	**************/
@@ -285,7 +285,7 @@ void Timer_config(void)
 void PWM_config(void)
 {
 	PWMx_InitDefine PWMx_InitStructure;
-	PWMA_Duty.PWM_COM_Duty = PWMPeriod / 100 * 68; // 3/4.2 , LED 3v电压
+	PWMA_Duty.PWM_COM_Duty = PWMPeriod / 100 * 18; // 3/4.2 , LED 3v电压
 
 	// 调试代码
 	PWMA_Duty.PWM2_Duty = PWMA_Duty.PWM_COM_Duty;
@@ -550,7 +550,7 @@ void scanerWhiteLEDControl()
 	if (S_OpenLedFlag)
 	{
 		S_OpenLedFlag = 0;			  // 防止重复触发
-		LED_White_Timer_Open_S = 300; // 1分钟
+		LED_White_Timer_Open_S = 600; // 10分钟
 		//IO_LED_White = POW_LED_OPEN;
 		PMW_LED_Open();
 
